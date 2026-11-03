@@ -48,4 +48,16 @@ class Product(models.Model):
         ]
 
 
-    
+    def save(self, *args, **kwargs):
+        self.slug = self.slug or slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('shop:detail', args=[self.slug])
+
+    @property
+    def on_sale(self):
+        return self.compare_at_price and self.compare_at_price > self.price
+
+    def __str__(self):
+        return self.name
