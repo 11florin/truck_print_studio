@@ -20,6 +20,18 @@ def product_list(request):
     """ Display the catalog and apply the filters from the query string. """
     return render(request, "shop/list.html")
 
+
+def category_detail(request, slug):
+    """ Display only the active products from the URL's category. """
+
+    category = get_object_or_404(Category, slug=slug)
+    products = category.products.filter(active=True).order_by("-created_at")
+    return render(request, "shop/category_detail.html", {
+        "category": category,
+        "products": products,
+    })
+
+
 def product_detail(request, slug):
     product = get_object_or_404(
         Product,
