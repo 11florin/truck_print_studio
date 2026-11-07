@@ -1,9 +1,12 @@
+""" The catalog, reviews, and wishlist templates. """
+
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
 
 class Category(models.Model):
+    """ Commercial collection used for pages and product filtering. """
     name = models.CharField(max_length=120)
     slug = models.SlugField(unique=True, blank=True)
 
@@ -21,6 +24,8 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    """ POD product displayed in the catalog, product detail, wishlist, and checkout. """
+    
     PRODUCT_TYPES = [('tshirt', 'T-shirt'), ('hoodie', 'Hoodie'), ('mug', 'Mug')]
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
     name = models.CharField(max_length=180)
