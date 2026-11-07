@@ -1,0 +1,34 @@
+{% extends "shop/base.html" %}
+
+{% block content %}
+
+<div class="container py-5">
+  <div class="row g-5">
+    <div class="col-md-6">
+      <div class="ratio ratio-1x1 bg-light">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" class="object-fit-cover" alt="{{ product.name }}">
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-md-6">
+      <p class="text-muted">{{ product.category.name }}</p>
+      <h1>{{ product.name }}</h1>
+      <h3 class="my-4">£{{ product.price }}</h3>
+      <p>{{ product.description }}</p>
+      <p class="small text-muted">Printed to order by {{ product.pod_provider }}.</p>
+      <form method="post" action="{% url 'shop:cart_add' product.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="shop:cart">
+        <div class="input-group mb-3" style="max-width:180px">
+          <input class="form-control" type="number" name="quantity" value="1"
+                 min="1" max="{{ product.stock }}">
+          <button class="btn btn-dark">Add to bag</button>
+        </div>
+      </form>
+      <hr class="my-5">
+      <!-- to be added review and wishlist -->
+    </div>
+  </div>
+</div>
+{% endblock %}
