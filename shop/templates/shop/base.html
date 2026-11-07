@@ -33,11 +33,11 @@
                             <summary class="nav-link text-dark">Categories</summary>
                             <div class="category-submenu">
                                 <a href="{% url 'shop:list' %}">All</a>
-                                <a href="">Cab &amp; Driver
+                                <a href="{% url 'shop:category' 'cab-driver' %}">Cab &amp; Driver
                                 </a>
-                                <a href="">Haulage Life
+                                <a href="{% url 'shop:category' 'haulage-life' %}">Haulage Life
                                 </a>
-                                <a href="">UK Motorway
+                                <a href="{% url 'shop:category' 'uk-motorways' %}">UK Motorway
                                 </a>
                             </div>
                         </details>
