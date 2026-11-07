@@ -74,6 +74,28 @@ body {
 .category-submenu a:hover {
   text-decoration: underline;
 }
+
+/* list */
+.catalog-header {
+    gap: 1.5rem;
+  }
+
+  .catalog-search {
+    width: 100%;
+  }
+
+  .catalog-filters {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+  }
+
+  .catalog-filter {
+    width: min(100%, 280px);
+  }
+
+/* media */
 @media (prefers-reduced-motion: reduce) {
   .navbar-collapse {
     transition: none;
@@ -119,3 +141,19 @@ body {
     padding: 0.4rem 0;
   }
 }
+
+/* list  media */
+@media (min-width: 768px) {
+    .catalog-search {
+      width: min(100%, 360px);
+    }
+
+    .catalog-filters {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .catalog-filter {
+      width: auto;
+    }
+  }

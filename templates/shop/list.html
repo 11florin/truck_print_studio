@@ -1,4 +1,110 @@
 {% extends "shop/base.html" %}
+
+{% block title %} Shop - Truck Print Studio {%endblock %} 
+
 {% block content %}
-<h1>Shop the collection</h1>
+
+<div class="container py-5">
+  <div
+    class="catalog-header d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-end mb-5"
+  >
+    <div class="text-center text-md-start">
+      <p class="text-uppercase small text-muted fw-semibold mb-2">
+        UK road transport
+      </p>
+      <h1 class="mb-0">Shop the collection</h1>
+      <p class="text-muted mt-2 mb-0">Road-ready designs for every journey.</p>
+    </div>
+    <form class="catalog-search d-flex">
+      <input
+        name="q"
+        value="{{ query }}"
+        class="form-control"
+        placeholder="Search lorry, motorway..."
+      />
+      <button class="btn btn-dark ms-2">Search</button>
+    </form>
+  </div>
+  <div class="catalog-filters mb-4">
+    <div class="catalog-filter dropdown">
+      <button
+        class="btn btn-outline-dark dropdown-toggle"
+        type="button"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+      >
+        Shop by category
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item" href="{% url 'shop:list' %}"
+            >All categories</a
+          >
+        </li>
+        {% for category in categories %}
+        <li>
+          <a
+            class="dropdown-item"
+            href="{% url 'shop:category' category.slug %}"
+            >{{ category.name }}</a
+          >
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="catalog-filter dropdown">
+      <button
+        class="btn btn-outline-dark dropdown-toggle"
+        type="button"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+      >
+        {% if selected_type %} 
+            {{ selected_type|title }} 
+        {% else %} 
+        Shop by product 
+        {% endif %}
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item" href="{% url 'shop:list' %}">All products</a>
+        </li>
+        {% for value, label in product_types %}
+        <li>
+          <a class="dropdown-item" href="?type={{ value }}">{{ label }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="row g-4">
+    {% for product in products %}
+    <div class="col-6 col-lg-3">
+      <div class="card h-100">
+        <div class="ratio ratio-1x1 bg-light">
+          {% if product.image %}<img
+            src="{{ product.image.url }}"
+            class="object-fit-cover"
+            alt="{{ product.name }}"
+          />
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <span class="badge text-bg-light"
+            >{{ product.get_product_type_display }}</span
+          >
+          <h5>{{ product.name }}</h5>
+          <p>£{{ product.price }}</p>
+          <a href="{{ product.get_absolute_url }}" class="btn btn-sm btn-dark">
+            View design
+          </a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p>No products found for this road.</p>
+    {% endfor %}
+  </div>
+</div>
+
 {% endblock %}

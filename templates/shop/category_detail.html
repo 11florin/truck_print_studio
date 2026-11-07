@@ -1,0 +1,31 @@
+{% extends "shop/base.html" %}
+
+{% block title %}
+{{ category.name }} Truck Print Studio {% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <p class="text-uppercase small text-muted mb-1">Roadbound collection</p>
+  <h1 class="mb-2">{{ category.name }}</h1>
+  <p class="text-muted mb-5">Products made for {{ category.name|lower }}.</p>
+  <div class="row g-4">
+    {% for product in products %}
+    <div class="col-6 col-lg-3">
+      <div class="card h-100">
+        <div class="ratio ratio-1x1 bg-light">
+          {% if product.image %}<img src="{{ product.image.url }}" class="object-fit-cover" alt="{{ product.name }}">{% endif %}
+        </div>
+        <div class="card-body">
+          <span class="badge text-bg-light">{{ product.get_product_type_display }}</span>
+          <h5>{{ product.name }}</h5>
+          <p>£{{ product.price }}</p>
+          <a href="{{ product.get_absolute_url }}" class="btn btn-sm btn-dark">View design</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">No products are available in this collection yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
