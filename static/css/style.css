@@ -40,6 +40,11 @@ body {
 .navbar-collapse.show {
   transform: translateX(0);
 }
+.navbar-brand img {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+}
 .category-menu {
   position: relative;
 }
