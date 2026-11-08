@@ -22,16 +22,17 @@ def product_list(request):
 
     products = Product.objects.filter(active=True).select_related("category")
     query = request.GET.get("q", "").strip()
-    category = request.GET.get("category", "")
-    product_type = request.GET.get("type", "")
+    category = request.GET.get("category", "").strip()
+    product_type = request.GET.get("type", "").strip()
+    valid_product_types = dict(Product.PRODUCT_TYPES)
 
     if query:
-        products = products.filter(Q(name_icontains=query) | Q(description_icontains=query))
+        products = products.filter(Q(name__icontains=query) | Q(description__icontains=query))
 
     if category:
         products = products.filter(category__slug=category)
 
-    if product_type in dict(Product.PRODUCT_TYPES):
+    if product_type in valid_product_types:
         products = products.filter(product_type=product_type)
 
     return render(request, "shop/list.html", {
@@ -39,7 +40,8 @@ def product_list(request):
         "categories": Category.objects.all(),
         "query": query,
         "product_type": Product.PRODUCT_TYPES,
-        "selected_type": product_type,
+        "selected_category": category,
+        "selected_type": product_type if product_type in valid_product_types else "",
     })
 
 
