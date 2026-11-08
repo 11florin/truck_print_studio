@@ -145,15 +145,24 @@ body {
 /* list  media */
 @media (min-width: 768px) {
     .catalog-search {
-      width: min(100%, 360px);
+      width: min(100%, 720px);
     }
 
     .catalog-filters {
       flex-direction: row;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-start;
     }
 
     .catalog-filter {
       width: auto;
+      flex: 1 1 160px;
+      min-width: 0;
+    }
+
+    .catalog-filter.btn {
+      flex: 0 0 auto;
+      white-space: nowrap;
     }
   }

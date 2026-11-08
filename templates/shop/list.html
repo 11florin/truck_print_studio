@@ -15,67 +15,52 @@
       <h1 class="mb-0">Shop the collection</h1>
       <p class="text-muted mt-2 mb-0">Road-ready designs for every journey.</p>
     </div>
-    <form class="catalog-search d-flex">
-      <input
-        name="q"
-        value="{{ query }}"
-        class="form-control"
-        placeholder="Search lorry, motorway..."
-      />
-      <button class="btn btn-dark ms-2">Search</button>
+    <form method="get" class="catalog-search">
+      <div class="d-flex">
+        <input
+          type="search"
+          name="q"
+          value="{{ query }}"
+          class="form-control"
+          placeholder="Search lorry, motorway..."
+        />
+        <button type="submit" class="btn btn-dark ms-2">Search</button>
+      </div>
+
+      <div class="catalog-filters mt-3">
+        <select name="category" class="catalog-filter form-select">
+          <option value="">All categories</option>
+          {% for category in categories %}
+          <option
+            value="{{ category.slug }}"
+            {% if selected_category == category.slug %}selected{% endif %}
+          >
+            {{ category.name }}
+          </option>
+          {% endfor %}
+        </select>
+
+        <select name="type" class="catalog-filter form-select">
+          <option value="">All products</option>
+          {% for value, label in product_type %}
+          <option
+            value="{{ value }}"
+            {% if selected_type == value %}selected{% endif %}
+          >
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+
+        <button type="submit" class="catalog-filter btn btn-dark">
+          Filter
+        </button>
+
+        <a href="{% url 'shop:list' %}" class="catalog-filter btn btn-outline-dark">
+          Reset filters
+        </a>
+      </div>
     </form>
-  </div>
-  <div class="catalog-filters mb-4">
-    <div class="catalog-filter dropdown">
-      <button
-        class="btn btn-outline-dark dropdown-toggle"
-        type="button"
-        data-bs-toggle="dropdown"
-        aria-expanded="false"
-      >
-        Shop by category
-      </button>
-      <ul class="dropdown-menu">
-        <li>
-          <a class="dropdown-item" href="{% url 'shop:list' %}"
-            >All categories</a
-          >
-        </li>
-        {% for category in categories %}
-        <li>
-          <a
-            class="dropdown-item"
-            href="{% url 'shop:category' category.slug %}"
-            >{{ category.name }}</a
-          >
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-    <div class="catalog-filter dropdown">
-      <button
-        class="btn btn-outline-dark dropdown-toggle"
-        type="button"
-        data-bs-toggle="dropdown"
-        aria-expanded="false"
-      >
-        {% if selected_type %} 
-            {{ selected_type|title }} 
-        {% else %} 
-        Shop by product 
-        {% endif %}
-      </button>
-      <ul class="dropdown-menu">
-        <li>
-          <a class="dropdown-item" href="{% url 'shop:list' %}">All products</a>
-        </li>
-        {% for value, label in product_types %}
-        <li>
-          <a class="dropdown-item" href="?type={{ value }}">{{ label }}</a>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
   </div>
   <div class="row g-4">
     {% for product in products %}
@@ -102,7 +87,10 @@
       </div>
     </div>
     {% empty %}
-    <p>No products found for this road.</p>
+    <p>No products found for the selected filters.</p>
+    <a href="{% url 'shop:list' %}" class="btn btn-outline-dark">
+      Reset filters
+    </a>
     {% endfor %}
   </div>
 </div>
