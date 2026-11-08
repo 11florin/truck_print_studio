@@ -15,7 +15,13 @@
     <body>
         <nav class="navbar navbar-expand-lg bg-white border-bottom">
             <div class="container">
-                <a class="navbar-brand brand fw-bold" href="/"></a>
+                <a class="navbar-brand brand fw-bold" href="{% url 'shop:home' %}">
+                    <img
+                        src="{% static 'images/logo.png' %}"
+                        alt="Truck Print Studio"
+                        height="45"
+                    >
+                </a>
                 <button
                     class="navbar-toggler"
                     type="button"
