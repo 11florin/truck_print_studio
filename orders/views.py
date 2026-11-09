@@ -68,3 +68,13 @@ def checkout(request):
         "orders/checkout.html",
         {"items": items, "total": total, "form": form},
     )
+
+
+
+def success(request, order_id):
+    """Display the confirmation for the order identified in the URL."""
+
+    if request.session.get("recent_order_id") != order_id:
+        raise Http404("Order confirmation is not available.")
+    order = get_object_or_404(Order, id=order_id)
+    return render(request, 'orders/success.html', {'order': order})
