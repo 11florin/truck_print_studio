@@ -70,3 +70,23 @@ def product_detail(request, slug):
     })
 
 
+def cart(request):
+    """ Convert the identifiers from the session into displayable products and totals."""
+    cart_data = _cart(request)
+    products = Product.objects.filter(id__in=cart_data.keys(), active=True)
+    items = []
+    for product in products:
+        try:
+            quantity = int(cart_data[str(product.id)])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 0 < quantity <= product.stock:
+            items.append(
+                {
+                    "product": product,
+                    "quantity": quantity,
+                    "total": product.price * quantity,
+                }
+            )
+    total = sum((item["total"] for item in items), Decimal("0"))
+    return render(request, "shop/cart.html", {"items": items, "total": total})
