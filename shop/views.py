@@ -12,7 +12,7 @@ from .models import Category, Product
 def home(request):
     """ Displays the homepage with active and featured products. """
     featured = Product.objects.filter(active=True, featured=True)[:8]
-    return render(request, "shop/base.html", {
+    return render(request, "shop/home.html", {
         "featured": featured
     })
 

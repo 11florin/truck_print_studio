@@ -65,6 +65,12 @@
             </div>
         </nav>
         <main>
+            {% for message in messages %}
+            <div class="container mt-3">
+                <div class="alert alert-success">{{ message }}</div>
+            </div>
+            {% endfor %}
+            
             {% block content %}
             
             {% endblock %}
