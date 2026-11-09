@@ -1,36 +1,91 @@
 {% extends "shop/base.html" %}
+{% block title %}Checkout · Truck Print Studio{% endblock %}
 {% block content %}
-<div class="container py-5">
-  <h1>Checkout</h1>
-  <p class="text-muted">Order total: £{{ total }}</p>
-  <form method="post" class="row g-3 mt-2">
-    {% csrf_token %}
-    {% if form.errors %}
-      <div class="alert alert-danger col-12">{{ form.errors }}</div>
-    {% endif %}
-    <div class="col-md-6">
-      <label class="form-label" for="{{ form.full_name.id_for_label }}">Full name</label>
-      {{ form.full_name }}
+
+
+<div class="container checkout-page py-5 py-lg-6">
+  <div class="checkout-heading mb-4">
+    <p class="text-uppercase small fw-semibold text-muted mb-2">Secure checkout</p>
+    <h1 class="display-6 fw-bold mb-2">Complete your order</h1>
+    <p class="text-muted mb-0">Enter your delivery details and we will prepare your order.</p>
+  </div>
+
+  <div class="row g-4 g-lg-5 align-items-start">
+    <div class="col-lg-7">
+      <div class="checkout-card">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <span class="badge rounded-pill text-bg-dark px-3 py-2">1</span>
+          <div>
+            <h2 class="h4 mb-1">Delivery details</h2>
+            <p class="small text-muted mb-0">Where should we send your order?</p>
+          </div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="{{ form.full_name.id_for_label }}">Full name</label>
+              {{ form.full_name }}
+              {% for error in form.full_name.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="{{ form.email.id_for_label }}">Email address</label>
+              {{ form.email }}
+              {% for error in form.email.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold" for="{{ form.address.id_for_label }}">Address</label>
+              {{ form.address }}
+              {% for error in form.address.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-7">
+              <label class="form-label fw-semibold" for="{{ form.city.id_for_label }}">City</label>
+              {{ form.city }}
+              {% for error in form.city.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-5">
+              <label class="form-label fw-semibold" for="{{ form.postal_code.id_for_label }}">Postal code</label>
+              {{ form.postal_code }}
+              {% for error in form.postal_code.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-dark checkout-submit w-100 mt-4">
+            Place order <span class="opacity-75 ms-1">· £{{ total }}</span>
+          </button>
+          <p class="text-center text-muted small mb-0 mt-3">Your details are used only to fulfil this order.</p>
+        </form>
+      </div>
     </div>
-    <div class="col-md-6">
-      <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
-      {{ form.email }}
+
+    <div class="col-lg-5">
+      <aside class="order-summary">
+        <div class="summary-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">Order summary</h2>
+            <span class="small opacity-75">{{ items|length }} item{{ items|length|pluralize }}</span>
+          </div>
+        </div>
+        {% for product, quantity in items %}
+          <div class="summary-item d-flex justify-content-between gap-3">
+            <div>
+              <p class="fw-semibold mb-1">{{ product.name }}</p>
+              <p class="small text-muted mb-0">Qty: {{ quantity }}</p>
+            </div>
+            <span class="fw-semibold text-nowrap">£{{ product.price|floatformat:2 }}</span>
+          </div>
+        {% empty %}
+          <div class="summary-item text-muted">Your bag is empty.</div>
+        {% endfor %}
+        <div class="summary-total d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Total</span>
+          <span class="h4 mb-0 fw-bold">£{{ total }}</span>
+        </div>
+      </aside>
     </div>
-    <div class="col-12">
-      <label class="form-label" for="{{ form.address.id_for_label }}">Address</label>
-      {{ form.address }}
-    </div>
-    <div class="col-md-6">
-      <label class="form-label" for="{{ form.city.id_for_label }}">City</label>
-      {{ form.city }}
-    </div>
-    <div class="col-md-6">
-      <label class="form-label" for="{{ form.postal_code.id_for_label }}">Postal code</label>
-      {{ form.postal_code }}
-    </div>
-    <div class="col-12">
-      <button class="btn btn-dark">Place order · £{{ total }}</button>
-    </div>
-  </form>
+  </div>
 </div>
 {% endblock %}

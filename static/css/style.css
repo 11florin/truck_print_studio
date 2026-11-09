@@ -41,9 +41,9 @@ body {
   transform: translateX(0);
 }
 .navbar-brand img {
-    height: 45px;
-    width: auto;
-    object-fit: contain;
+  height: 45px;
+  width: auto;
+  object-fit: contain;
 }
 .category-menu {
   position: relative;
@@ -82,23 +82,83 @@ body {
 
 /* list */
 .catalog-header {
-    gap: 1.5rem;
-  }
+  gap: 1.5rem;
+}
 
-  .catalog-search {
-    width: 100%;
-  }
+.catalog-search {
+  width: 100%;
+}
 
-  .catalog-filters {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: .75rem;
-  }
+.catalog-filters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
 
-  .catalog-filter {
-    width: min(100%, 280px);
-  }
+.catalog-filter {
+  width: min(100%, 280px);
+}
+
+/* checkout */
+.checkout-page {
+  max-width: 1140px;
+}
+.checkout-heading {
+  max-width: 680px;
+}
+.checkout-card,
+.order-summary {
+  background: #fff;
+  border: 1px solid #e8e3da;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2.5rem #17251f0d;
+}
+.checkout-card {
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+.checkout-card .form-control {
+  min-height: 3.1rem;
+  border-color: #d7d1c7;
+  border-radius: 0.6rem;
+  padding: 0.75rem 0.9rem;
+}
+.checkout-card textarea.form-control {
+  min-height: 7rem;
+  resize: vertical;
+}
+.checkout-card .form-control:focus {
+  border-color: #8d4c2c;
+  box-shadow: 0 0 0 0.2rem #8d4c2c1f;
+}
+.order-summary {
+  position: sticky;
+  top: 1.5rem;
+  overflow: hidden;
+}
+.summary-header {
+  background: #16251f;
+  color: #fff;
+  padding: 1.25rem 1.4rem;
+}
+.summary-item {
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid #eee9e1;
+}
+.summary-total {
+  padding: 1.25rem 1.4rem;
+  background: #faf8f4;
+}
+.checkout-submit {
+  background: #16251f;
+  border: 0;
+  border-radius: 0.6rem;
+  padding: 0.85rem 1.25rem;
+}
+.checkout-submit:hover,
+.checkout-submit:focus {
+  background: #263d35;
+}
 
 /* media */
 @media (prefers-reduced-motion: reduce) {
@@ -149,25 +209,25 @@ body {
 
 /* list  media */
 @media (min-width: 768px) {
-    .catalog-search {
-      width: min(100%, 720px);
-    }
-
-    .catalog-filters {
-      flex-direction: row;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: flex-start;
-    }
-
-    .catalog-filter {
-      width: auto;
-      flex: 1 1 160px;
-      min-width: 0;
-    }
-
-    .catalog-filter.btn {
-      flex: 0 0 auto;
-      white-space: nowrap;
-    }
+  .catalog-search {
+    width: min(100%, 720px);
   }
+
+  .catalog-filters {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .catalog-filter {
+    width: auto;
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+
+  .catalog-filter.btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
