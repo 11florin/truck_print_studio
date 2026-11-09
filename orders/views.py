@@ -8,5 +8,5 @@ from django.shortcuts import render
 def checkout(request):
     """ Build the order from the session cart and display the checkout. """
     return render(request, "orders/checkout.html", {
-        "message": "Checkout-ul este în lucru."
+        "message": "Checkout."
     })
