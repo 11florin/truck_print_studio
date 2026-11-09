@@ -1,5 +1,10 @@
-from django.shortcuts import get_object_or_404, render
+
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, render, redirect
 from django.db.models import Q
+from django.http import HttpRequest
+from django.utils.http import url_has_allowed_host_and_scheme
+
 from .models import Category, Product
 
 from decimal import Decimal
@@ -68,6 +73,45 @@ def product_detail(request, slug):
     return render(request, "shop/detail.html", {
         "product": product
     })
+
+
+def cart_add(request, product_id):
+    """Add the requested quantity to the cart stored in the session."""
+
+    product = get_object_or_404(Product, id=product_id, active=True)
+    cart = _cart(request)
+    key = str(product.id)
+    next_url = _safe_next_url(request)
+    try:
+        requested_quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        messages.error(request, "Please enter a valid quantity.")
+        return redirect(next_url)
+    if requested_quantity < 1:
+        messages.error(request, "Quantity must be at least one.")
+        return redirect(next_url)
+    quantity = min(
+        int(cart.get(key, 0)) + requested_quantity,
+        product.stock,
+    )
+    if quantity:
+        cart[key] = quantity
+        request.session.modified = True
+        messages.success(request, f'{product.name} added to your bag.')
+    return redirect(next_url)
+
+
+def _safe_next_url(request: HttpRequest) -> str:
+    """Returns a valid internal destination or the cart page."""
+
+    next_url = request.POST.get("next", "")
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return "shop:cart"
 
 
 def cart(request):
