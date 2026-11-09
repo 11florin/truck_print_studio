@@ -2,11 +2,14 @@ from django.shortcuts import get_object_or_404, render
 from django.db.models import Q
 from .models import Category, Product
 
+from decimal import Decimal
+
+
 
 # Create your views here.
-# def _cart(request):
-#     """ Returns the session cart, initializing it if it is missing. """
-#     pass
+def _cart(request):
+    """ Returns the session cart, initializing it if it is missing. """
+    return request.session.setdefault('cart', {})
 
 
 def home(request):
@@ -67,6 +70,3 @@ def product_detail(request, slug):
     })
 
 
-def cart(request):
-    """ Convert the identifiers from the session into displayable products and totals."""
-    return render(request, "shop/cart.html")
