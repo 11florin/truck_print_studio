@@ -1,8 +1,36 @@
 {% extends "shop/base.html" %}
-{% load static %}
-
 {% block content %}
-
-<h1>Checkout</h1>
-
+<div class="container py-5">
+  <h1>Checkout</h1>
+  <p class="text-muted">Order total: £{{ total }}</p>
+  <form method="post" class="row g-3 mt-2">
+    {% csrf_token %}
+    {% if form.errors %}
+      <div class="alert alert-danger col-12">{{ form.errors }}</div>
+    {% endif %}
+    <div class="col-md-6">
+      <label class="form-label" for="{{ form.full_name.id_for_label }}">Full name</label>
+      {{ form.full_name }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+      {{ form.email }}
+    </div>
+    <div class="col-12">
+      <label class="form-label" for="{{ form.address.id_for_label }}">Address</label>
+      {{ form.address }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="{{ form.city.id_for_label }}">City</label>
+      {{ form.city }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="{{ form.postal_code.id_for_label }}">Postal code</label>
+      {{ form.postal_code }}
+    </div>
+    <div class="col-12">
+      <button class="btn btn-dark">Place order · £{{ total }}</button>
+    </div>
+  </form>
+</div>
 {% endblock %}
