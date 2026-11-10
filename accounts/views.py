@@ -2,6 +2,7 @@
 
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
 
@@ -20,3 +21,9 @@ def register(request):
     return render(request, 'accounts/register.html', {
         'form': form,
     })
+
+
+@login_required
+def profile(request):
+    """Display the authenticated user's account page."""
+    return render(request, 'accounts/profile.html')
