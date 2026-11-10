@@ -1,18 +1,26 @@
-from django.shortcuts import get_object_or_404, render
+
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, render, redirect
 from django.db.models import Q
+from django.http import HttpRequest
+from django.utils.http import url_has_allowed_host_and_scheme
+
 from .models import Category, Product
+
+from decimal import Decimal
+
 
 
 # Create your views here.
-# def _cart(request):
-#     """ Returns the session cart, initializing it if it is missing. """
-#     pass
+def _cart(request):
+    """ Returns the session cart, initializing it if it is missing. """
+    return request.session.setdefault('cart', {})
 
 
 def home(request):
     """ Displays the homepage with active and featured products. """
     featured = Product.objects.filter(active=True, featured=True)[:8]
-    return render(request, "shop/base.html", {
+    return render(request, "shop/home.html", {
         "featured": featured
     })
 
@@ -67,6 +75,62 @@ def product_detail(request, slug):
     })
 
 
+def cart_add(request, product_id):
+    """Add the requested quantity to the cart stored in the session."""
+
+    product = get_object_or_404(Product, id=product_id, active=True)
+    cart = _cart(request)
+    key = str(product.id)
+    next_url = _safe_next_url(request)
+    try:
+        requested_quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        messages.error(request, "Please enter a valid quantity.")
+        return redirect(next_url)
+    if requested_quantity < 1:
+        messages.error(request, "Quantity must be at least one.")
+        return redirect(next_url)
+    quantity = min(
+        int(cart.get(key, 0)) + requested_quantity,
+        product.stock,
+    )
+    if quantity:
+        cart[key] = quantity
+        request.session.modified = True
+        messages.success(request, f'{product.name} added to your bag.')
+    return redirect(next_url)
+
+
+def _safe_next_url(request: HttpRequest) -> str:
+    """Returns a valid internal destination or the cart page."""
+
+    next_url = request.POST.get("next", "")
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return "shop:cart"
+
+
 def cart(request):
     """ Convert the identifiers from the session into displayable products and totals."""
-    return render(request, "shop/cart.html")
+    cart_data = _cart(request)
+    products = Product.objects.filter(id__in=cart_data.keys(), active=True)
+    items = []
+    for product in products:
+        try:
+            quantity = int(cart_data[str(product.id)])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 0 < quantity <= product.stock:
+            items.append(
+                {
+                    "product": product,
+                    "quantity": quantity,
+                    "total": product.price * quantity,
+                }
+            )
+    total = sum((item["total"] for item in items), Decimal("0"))
+    return render(request, "shop/cart.html", {"items": items, "total": total})
