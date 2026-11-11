@@ -53,6 +53,9 @@
             <a class="nav-link text-dark" href="{% url 'shop:list' %}">Shop</a>
             <a class="nav-link text-dark" href="{% url 'shop:cart' %}">Bag</a>
             {% if user.is_authenticated %}
+            <a class="nav-link text-dark" href="{% url 'orders:history' %}">
+              Orders
+            </a>
             <form method="post" action="{% url 'accounts:logout' %}">
               {% csrf_token %}
               <button
