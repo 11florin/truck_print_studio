@@ -1,0 +1,54 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Order #{{ order.id }} · Truck Print Studio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+    <div>
+      <h1>Order #{{ order.id }}</h1>
+      <p class="text-muted mb-0">{{ order.created_at|date:"j F Y, H:i" }}</p>
+    </div>
+    <span class="badge text-bg-light align-self-start">{{ order.get_status_display }}</span>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="h5">Items</h2>
+          {% for item in order.items.all %}
+          <div class="d-flex justify-content-between border-top py-3">
+            <div>
+              <p class="mb-1">{{ item.product.name }}</p>
+              <p class="small text-muted mb-0">Quantity: {{ item.quantity }}</p>
+            </div>
+            <span>£{{ item.price|floatformat:2 }}</span>
+          </div>
+          {% endfor %}
+          <div class="d-flex justify-content-between border-top pt-3">
+            <strong>Total</strong>
+            <strong>£{{ order.total|floatformat:2 }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="h5">Delivery details</h2>
+          <p class="mb-1">{{ order.full_name }}</p>
+          <p class="mb-1">{{ order.email }}</p>
+          <p class="mb-1">{{ order.address }}</p>
+          <p class="mb-0">{{ order.city }}, {{ order.postal_code }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a class="btn btn-outline-dark mt-4" href="{% url 'orders:history' %}">
+    Back to order history
+  </a>
+</div>
+{% endblock %}
