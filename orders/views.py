@@ -1,6 +1,8 @@
 """ Views for the store's checkout flow. """
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -19,16 +21,38 @@ def checkout(request):
     cart = request.session.get('cart', {})
     products = Product.objects.filter(id__in=cart.keys(), active=True)
     items = []
+    stock_errors = []
     for product in products:
         try:
             quantity = int(cart[str(product.id)])
         except (KeyError, TypeError, ValueError):
+            stock_errors.append(f"{product.name} has an invalid quantity.")
             continue
-        if 0 < quantity <= product.stock:
+        if quantity <= 0:
+            stock_errors.append(f"{product.name} must have a positive quantity.")
+        elif quantity > product.stock:
+            stock_errors.append(
+                f"Only {product.stock} of {product.name} are currently in stock."
+            )
+        else:
             items.append((product, quantity))
+
+    missing_product_ids = set(cart) - {str(product.id) for product in products}
+    if missing_product_ids:
+        stock_errors.append("One or more products in your bag are no longer available.")
+
     total = sum((p.price * quantity for p, quantity in items), Decimal('0'))
     form = CheckoutForm(request.POST or None)
     if request.method == "POST" and items:
+        if stock_errors:
+            for error in stock_errors:
+                messages.error(request, error)
+            return render(
+                request,
+                "orders/checkout.html",
+                {"items": items, "total": total, "form": form},
+                status=400,
+            )
         if not form.is_valid():
             messages.error(request, "Please complete all checkout fields.")
             return render(
@@ -41,21 +65,22 @@ def checkout(request):
                 status=400,
             )
         data = form.cleaned_data
-        order = Order.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            email=data["email"],
-            full_name=data["full_name"],
-            address=data["address"],
-            city=data["city"],
-            postal_code=data["postal_code"],
-            total=total,
-        )
-        OrderItem.objects.bulk_create(
-            [
-                OrderItem(order=order, product=p, quantity=q, price=p.price)
-                for p, q in items
-            ]
-        )
+        with transaction.atomic():
+            order = Order.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                email=data["email"],
+                full_name=data["full_name"],
+                address=data["address"],
+                city=data["city"],
+                postal_code=data["postal_code"],
+                total=total,
+            )
+            OrderItem.objects.bulk_create(
+                [
+                    OrderItem(order=order, product=p, quantity=q, price=p.price)
+                    for p, q in items
+                ]
+            )
         request.session['cart'] = {}
         request.session["recent_order_id"] = order.id
         messages.success(
@@ -76,5 +101,30 @@ def success(request, order_id):
 
     if request.session.get("recent_order_id") != order_id:
         raise Http404("Order confirmation is not available.")
-    order = get_object_or_404(Order, id=order_id)
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items__product"),
+        id=order_id,
+    )
+    if request.user.is_authenticated and order.user_id != request.user.id:
+        raise Http404("Order confirmation is not available.")
     return render(request, 'orders/success.html', {'order': order})
+
+
+@login_required
+def order_history(request):
+    """Display the authenticated user's orders."""
+
+    orders = Order.objects.filter(user=request.user).order_by("-created_at")
+    return render(request, "orders/history.html", {"orders": orders})
+
+
+@login_required
+def order_detail(request, order_id):
+    """Display an order only when it belongs to the authenticated user."""
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items__product"),
+        id=order_id,
+        user=request.user,
+    )
+    return render(request, "orders/detail.html", {"order": order})
