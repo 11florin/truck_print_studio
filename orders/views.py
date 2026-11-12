@@ -66,6 +66,43 @@ def checkout(request):
             )
         data = form.cleaned_data
         with transaction.atomic():
+            locked_products = {
+                product.id: product
+                for product in Product.objects.select_for_update().filter(
+                    id__in=[product.id for product, _ in items],
+                    active=True,
+                )
+            }
+            locked_items = []
+            stock_errors = []
+            for product, quantity in items:
+                locked_product = locked_products.get(product.id)
+                if locked_product is None:
+                    stock_errors.append(
+                        f"{product.name} is no longer available."
+                    )
+                elif quantity > locked_product.stock:
+                    stock_errors.append(
+                        f"Only {locked_product.stock} of "
+                        f"{locked_product.name} are currently in stock."
+                    )
+                else:
+                    locked_items.append((locked_product, quantity))
+
+            if stock_errors:
+                for error in stock_errors:
+                    messages.error(request, error)
+                return render(
+                    request,
+                    "orders/checkout.html",
+                    {"items": items, "total": total, "form": form},
+                    status=400,
+                )
+
+            total = sum(
+                (product.price * quantity for product, quantity in locked_items),
+                Decimal("0"),
+            )
             order = Order.objects.create(
                 user=request.user if request.user.is_authenticated else None,
                 email=data["email"],
@@ -77,10 +114,13 @@ def checkout(request):
             )
             OrderItem.objects.bulk_create(
                 [
-                    OrderItem(order=order, product=p, quantity=q, price=p.price)
-                    for p, q in items
+                    OrderItem(order=order, product=product, quantity=quantity, price=product.price)
+                    for product, quantity in locked_items
                 ]
             )
+            for product, quantity in locked_items:
+                product.stock -= quantity
+                product.save(update_fields=["stock"])
         request.session['cart'] = {}
         request.session["recent_order_id"] = order.id
         messages.success(
