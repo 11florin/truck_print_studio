@@ -7,13 +7,23 @@
       <span>{{ item.product.name }} x {{ item.quantity }}</span>
       <span>
         £{{ item.total }}
-        
-        <a href="/"    
-           class="text-danger ms-3">Remove</a>
+        <form
+          method="post"
+          action="{% url 'shop:cart_remove' item.product.id %}"
+          class="d-inline"
+        >
+          {% csrf_token %}
+          <button type="submit" class="btn btn-link text-danger ms-3 p-0">
+            Remove
+          </button>
+        </form>
       </span>
     </div>
   {% empty %}
     <p>Your bag is empty.</p>
+    <a href="{% url 'shop:list' %}" class="btn btn-dark">
+      Continue shopping
+    </a>
   {% endfor %}
   {% if items %}
     <h3 class="text-end mt-4">Total: £{{ total }}</h3>
