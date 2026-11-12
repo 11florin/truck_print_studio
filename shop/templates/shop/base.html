@@ -56,6 +56,9 @@
             <a class="nav-link text-dark" href="{% url 'orders:history' %}">
               Orders
             </a>
+            <a class="nav-link text-dark" href="{% url 'shop:wishlist' %}">
+              Wishlist
+            </a>
             <form method="post" action="{% url 'accounts:logout' %}">
               {% csrf_token %}
               <button
