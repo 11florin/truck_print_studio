@@ -7,7 +7,8 @@ from django.http import HttpRequest
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .models import Category, Product, Wishlist
+from .forms import ReviewForm
+from .models import Category, Product, Review, Wishlist
 
 from decimal import Decimal
 
@@ -76,10 +77,71 @@ def product_detail(request, slug):
         request.user.is_authenticated
         and Wishlist.objects.filter(user=request.user, product=product).exists()
     )
+    reviews = product.reviews.select_related("user")
     return render(request, "shop/detail.html", {
         "product": product,
         "is_in_wishlist": is_in_wishlist,
+        "reviews": reviews,
     })
+
+
+@login_required
+def review_create(request, product_id):
+    """Create a review for an active product."""
+
+    product = get_object_or_404(Product, id=product_id, active=True)
+    form = ReviewForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        review = form.save(commit=False)
+        review.user = request.user
+        review.product = product
+        review.save()
+        messages.success(request, "Your review was added.")
+        return redirect("shop:detail", slug=product.slug)
+    return render(request, "shop/review_form.html", {
+        "form": form,
+        "product": product,
+        "form_title": "Write a review",
+        "submit_label": "Publish review",
+    })
+
+
+@login_required
+def review_update(request, review_id):
+    """Edit a review only when it belongs to the authenticated user."""
+
+    review = get_object_or_404(
+        Review.objects.select_related("product"),
+        id=review_id,
+        user=request.user,
+    )
+    form = ReviewForm(request.POST or None, instance=review)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Your review was updated.")
+        return redirect("shop:detail", slug=review.product.slug)
+    return render(request, "shop/review_form.html", {
+        "form": form,
+        "product": review.product,
+        "form_title": "Edit your review",
+        "submit_label": "Save changes",
+    })
+
+
+@login_required
+@require_POST
+def review_delete(request, review_id):
+    """Delete a review only when it belongs to the authenticated user."""
+
+    review = get_object_or_404(
+        Review.objects.select_related("product"),
+        id=review_id,
+        user=request.user,
+    )
+    product_slug = review.product.slug
+    review.delete()
+    messages.success(request, "Your review was deleted.")
+    return redirect("shop:detail", slug=product_slug)
 
 
 @login_required
