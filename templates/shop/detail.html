@@ -75,7 +75,25 @@
           <article class="border-top py-3">
             <div class="d-flex justify-content-between">
               <strong>{{ review.user.username }}</strong>
-              <span>{{ review.rating }}/5</span>
+              <span
+                class="review-rating review-rating--{{ review.rating }}"
+                role="img"
+                aria-label="{{ review.rating }} out of 5 stars"
+              >
+                <span class="review-rating__base" aria-hidden="true">
+                  {% for star in "12345" %}
+                    <i class="fa-solid fa-star"></i>
+                  {% endfor %}
+                </span>
+                <span
+                  class="review-rating__fill"
+                  aria-hidden="true"
+                >
+                  {% for star in "12345" %}
+                    <i class="fa-solid fa-star"></i>
+                  {% endfor %}
+                </span>
+              </span>
             </div>
             <p class="mb-2">{{ review.comment }}</p>
             <p class="small text-muted mb-2">
