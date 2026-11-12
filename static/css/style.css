@@ -113,6 +113,46 @@ body {
   outline-offset: 0.2rem;
 }
 
+.review-rating {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  letter-spacing: 0.1rem;
+}
+
+.review-rating__base {
+  color: #c9c3b9;
+}
+
+.review-rating__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  color: #d88a26;
+  white-space: nowrap;
+}
+
+.review-rating--1 .review-rating__fill {
+  width: 20%;
+}
+
+.review-rating--2 .review-rating__fill {
+  width: 40%;
+}
+
+.review-rating--3 .review-rating__fill {
+  width: 60%;
+}
+
+.review-rating--4 .review-rating__fill {
+  width: 80%;
+}
+
+.review-rating--5 .review-rating__fill {
+  width: 100%;
+}
+
 /* list */
 .catalog-header {
   gap: 1.5rem;
