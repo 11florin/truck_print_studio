@@ -185,6 +185,7 @@ def wishlist_remove(request, product_id):
     return redirect("shop:detail", slug=product.slug)
 
 
+@require_POST
 def cart_add(request, product_id):
     """Add the requested quantity to the cart stored in the session."""
 
