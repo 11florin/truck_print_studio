@@ -19,12 +19,28 @@ def checkout(request):
     """ Build the order from the session cart and display the checkout. """
 
     cart = request.session.get('cart', {})
-    products = Product.objects.filter(id__in=cart.keys(), active=True)
+    cart_entries = []
+    product_ids = set()
+    for cart_key, cart_value in cart.items():
+        product_id, separator, size = str(cart_key).partition(":")
+        if not product_id.isdigit():
+            continue
+        if separator and size not in dict(Product.SIZE_CHOICES):
+            continue
+        quantity = cart_value.get("quantity", 0) if isinstance(cart_value, dict) else cart_value
+        cart_entries.append((int(product_id), size, quantity))
+        product_ids.add(int(product_id))
+    products = Product.objects.filter(id__in=product_ids, active=True)
+    products_by_id = {product.id: product for product in products}
     items = []
     stock_errors = []
-    for product in products:
+    for product_id, size, raw_quantity in cart_entries:
+        product = products_by_id.get(product_id)
+        if product is None:
+            stock_errors.append("One or more products in your bag are no longer available.")
+            continue
         try:
-            quantity = int(cart[str(product.id)])
+            quantity = int(raw_quantity)
         except (KeyError, TypeError, ValueError):
             stock_errors.append(f"{product.name} has an invalid quantity.")
             continue
@@ -35,13 +51,13 @@ def checkout(request):
                 f"Only {product.stock} of {product.name} are currently in stock."
             )
         else:
-            items.append((product, quantity))
+            items.append((product, quantity, size))
 
-    missing_product_ids = set(cart) - {str(product.id) for product in products}
+    missing_product_ids = product_ids - set(products_by_id)
     if missing_product_ids:
         stock_errors.append("One or more products in your bag are no longer available.")
 
-    total = sum((p.price * quantity for p, quantity in items), Decimal('0'))
+    total = sum((p.price * quantity for p, quantity, size in items), Decimal('0'))
     form = CheckoutForm(request.POST or None)
     if request.method == "POST" and items:
         if stock_errors:
@@ -69,13 +85,13 @@ def checkout(request):
             locked_products = {
                 product.id: product
                 for product in Product.objects.select_for_update().filter(
-                    id__in=[product.id for product, _ in items],
+                    id__in=[product.id for product, quantity, size in items],
                     active=True,
                 )
             }
             locked_items = []
             stock_errors = []
-            for product, quantity in items:
+            for product, quantity, size in items:
                 locked_product = locked_products.get(product.id)
                 if locked_product is None:
                     stock_errors.append(
@@ -87,7 +103,7 @@ def checkout(request):
                         f"{locked_product.name} are currently in stock."
                     )
                 else:
-                    locked_items.append((locked_product, quantity))
+                    locked_items.append((locked_product, quantity, size))
 
             if stock_errors:
                 for error in stock_errors:
@@ -100,7 +116,7 @@ def checkout(request):
                 )
 
             total = sum(
-                (product.price * quantity for product, quantity in locked_items),
+                (product.price * quantity for product, quantity, size in locked_items),
                 Decimal("0"),
             )
             order = Order.objects.create(
@@ -114,11 +130,17 @@ def checkout(request):
             )
             OrderItem.objects.bulk_create(
                 [
-                    OrderItem(order=order, product=product, quantity=quantity, price=product.price)
-                    for product, quantity in locked_items
+                    OrderItem(
+                        order=order,
+                        product=product,
+                        quantity=quantity,
+                        price=product.price,
+                        size=size,
+                    )
+                    for product, quantity, size in locked_items
                 ]
             )
-            for product, quantity in locked_items:
+            for product, quantity, size in locked_items:
                 product.stock -= quantity
                 product.save(update_fields=["stock"])
         request.session['cart'] = {}
