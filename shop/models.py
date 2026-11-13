@@ -29,6 +29,7 @@ class Product(models.Model):
     """ POD product displayed in the catalog, product detail, wishlist, and checkout. """
     
     PRODUCT_TYPES = [('tshirt', 'T-shirt'), ('hoodie', 'Hoodie'), ('mug', 'Mug')]
+    SIZE_CHOICES = [('S', 'S'), ('M', 'M'), ('L', 'L'), ('XL', 'XL'), ('XXL', 'XXL')]
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
     name = models.CharField(max_length=180)
     slug = models.SlugField(unique=True, blank=True)
@@ -61,6 +62,10 @@ class Product(models.Model):
 
     def get_absolute_url(self):
         return reverse('shop:detail', args=[self.slug])
+
+    @property
+    def has_sizes(self):
+        return self.product_type in {'tshirt', 'hoodie'}
 
     @property
     def on_sale(self):
