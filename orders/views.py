@@ -59,7 +59,7 @@ def checkout(request):
 
     total = sum((p.price * quantity for p, quantity, size in items), Decimal('0'))
     form = CheckoutForm(request.POST or None)
-    if request.method == "POST" and items:
+    if request.method == "POST" and (items or stock_errors):
         if stock_errors:
             for error in stock_errors:
                 messages.error(request, error)
