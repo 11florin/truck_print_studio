@@ -232,6 +232,12 @@ body {
 .checkout-submit:focus {
   background: #263d35;
 }
+.bag-item__image {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 0.4rem;
+}
 
 /* media */
 @media (prefers-reduced-motion: reduce) {

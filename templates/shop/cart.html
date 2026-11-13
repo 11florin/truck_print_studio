@@ -3,13 +3,21 @@
 <div class="container py-5">
   <h1>Your bag</h1>
   {% for item in items %}
-    <div class="d-flex justify-content-between border-bottom py-3">
-      <span>{{ item.product.name }} x {{ item.quantity }}</span>
-      <span>
+    <div class="bag-item d-flex justify-content-between align-items-center border-bottom py-3">
+      <div class="d-flex align-items-center gap-3">
+        {% if item.product.image %}
+          <img class="bag-item__image" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+        {% endif %}
+        <div>
+          <span>{{ item.product.name }} x {{ item.quantity }}</span>
+          {% if item.size %}<div class="small text-muted">Size: {{ item.size }}</div>{% endif %}
+        </div>
+      </div>
+      <span class="text-nowrap">
         £{{ item.total }}
         <form
           method="post"
-          action="{% url 'shop:cart_remove' item.product.id %}"
+          action="{% url 'shop:cart_remove' item.cart_key %}"
           class="d-inline"
         >
           {% csrf_token %}
