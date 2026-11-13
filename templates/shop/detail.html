@@ -20,6 +20,15 @@
       <form method="post" action="{% url 'shop:cart_add' product.id %}">
         {% csrf_token %}
         <input type="hidden" name="next" value="shop:cart">
+        {% if product.has_sizes %}
+          <label class="form-label" for="product-size">Size</label>
+          <select class="form-select mb-3 product-size" id="product-size" name="size" required>
+            <option value="" selected disabled>Choose a size</option>
+            {% for value, label in size_choices %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        {% endif %}
         <div class="input-group mb-3" style="max-width:180px">
           <input class="form-control" type="number" name="quantity" value="1"
                  min="1" max="{{ product.stock }}">
