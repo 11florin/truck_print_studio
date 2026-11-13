@@ -20,6 +20,17 @@ def _cart(request):
     return request.session.setdefault('cart', {})
 
 
+def _cart_key(product_id, size=""):
+    return f"{product_id}:{size}" if size else str(product_id)
+
+
+def _cart_key_parts(cart_key):
+    product_id, separator, size = str(cart_key).partition(":")
+    if not product_id.isdigit() or (separator and size not in dict(Product.SIZE_CHOICES)):
+        return None, ""
+    return int(product_id), size
+
+
 def home(request):
     """ Displays the homepage with active and featured products. """
     featured = Product.objects.filter(active=True, featured=True)[:8]
@@ -80,6 +91,7 @@ def product_detail(request, slug):
     reviews = product.reviews.select_related("user")
     return render(request, "shop/detail.html", {
         "product": product,
+        "size_choices": Product.SIZE_CHOICES if product.has_sizes else (),
         "is_in_wishlist": is_in_wishlist,
         "reviews": reviews,
     })
@@ -191,7 +203,13 @@ def cart_add(request, product_id):
 
     product = get_object_or_404(Product, id=product_id, active=True)
     cart = _cart(request)
-    key = str(product.id)
+    size = request.POST.get("size", "").strip().upper()
+    if product.has_sizes and size not in dict(Product.SIZE_CHOICES):
+        messages.error(request, "Please select a valid size.")
+        return redirect(_safe_next_url(request))
+    if not product.has_sizes:
+        size = ""
+    key = _cart_key(product.id, size)
     next_url = _safe_next_url(request)
     try:
         requested_quantity = int(request.POST.get("quantity", 1))
@@ -201,10 +219,10 @@ def cart_add(request, product_id):
     if requested_quantity < 1:
         messages.error(request, "Quantity must be at least one.")
         return redirect(next_url)
-    quantity = min(
-        int(cart.get(key, 0)) + requested_quantity,
-        product.stock,
-    )
+    existing_quantity = cart.get(key, 0)
+    if isinstance(existing_quantity, dict):
+        existing_quantity = existing_quantity.get("quantity", 0)
+    quantity = min(int(existing_quantity) + requested_quantity, product.stock)
     if quantity:
         cart[key] = quantity
         request.session.modified = True
@@ -213,11 +231,14 @@ def cart_add(request, product_id):
 
 
 @require_POST
-def cart_remove(request, product_id):
+def cart_remove(request, cart_key):
     """Remove a product from the session cart and return to the bag."""
 
     cart = _cart(request)
-    key = str(product_id)
+    product_id, size = _cart_key_parts(cart_key)
+    if product_id is None:
+        return redirect("shop:cart")
+    key = _cart_key(product_id, size)
     product = Product.objects.filter(id=product_id).first()
     if key in cart:
         cart.pop(key)
@@ -243,18 +264,33 @@ def _safe_next_url(request: HttpRequest) -> str:
 def cart(request):
     """ Convert the identifiers from the session into displayable products and totals."""
     cart_data = _cart(request)
-    products = Product.objects.filter(id__in=cart_data.keys(), active=True)
+    cart_entries = []
+    product_ids = set()
+    for cart_key, cart_value in cart_data.items():
+        product_id, size = _cart_key_parts(cart_key)
+        if product_id is None:
+            continue
+        quantity = cart_value.get("quantity", 0) if isinstance(cart_value, dict) else cart_value
+        product_ids.add(product_id)
+        cart_entries.append((cart_key, product_id, size, quantity))
+    products = Product.objects.filter(id__in=product_ids, active=True)
+    products_by_id = {product.id: product for product in products}
     items = []
-    for product in products:
+    for cart_key, product_id, size, raw_quantity in cart_entries:
+        product = products_by_id.get(product_id)
+        if product is None:
+            continue
         try:
-            quantity = int(cart_data[str(product.id)])
+            quantity = int(raw_quantity)
         except (KeyError, TypeError, ValueError):
             continue
         if 0 < quantity <= product.stock:
             items.append(
                 {
+                    "cart_key": cart_key,
                     "product": product,
                     "quantity": quantity,
+                    "size": size,
                     "total": product.price * quantity,
                 }
             )
