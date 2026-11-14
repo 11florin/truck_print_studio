@@ -4,7 +4,11 @@
 {% block content %}
 <div class="container py-5">
   <div class="text-center mb-5">
-    <h1>Thank you for your order!</h1>
+    {% if order.status == "paid" %}
+      <h1>Thank you for your order!</h1>
+    {% else %}
+      <h1>Your payment is being processed</h1>
+    {% endif %}
     <p class="text-muted mb-1">Order #{{ order.id }} has been received.</p>
     <p class="text-muted">{{ order.created_at|date:"j F Y, H:i" }}</p>
   </div>
@@ -18,7 +22,10 @@
           <p class="mb-4"><strong>Total:</strong> £{{ order.total|floatformat:2 }}</p>
           {% for item in order.items.all %}
           <div class="d-flex justify-content-between border-top py-3">
-            <span>{{ item.product.name }} × {{ item.quantity }}</span>
+            <span>
+              {{ item.product.name }} × {{ item.quantity }}
+              {% if item.size %} · Size: {{ item.size }}{% endif %}
+            </span>
             <span>£{{ item.price|floatformat:2 }}</span>
           </div>
           {% endfor %}
