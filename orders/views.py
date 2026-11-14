@@ -3,16 +3,44 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+import stripe
 
 from .forms import CheckoutForm
 from shop.models import Product
 from .models import Order, OrderItem
+from .stripe_service import (
+    StripeConfigurationError,
+    create_checkout_session,
+    expire_checkout_session,
+    verify_webhook,
+)
 
 from decimal import Decimal
 
-# Create your views here.
+def _release_reserved_stock(order):
+    """Release an order's reservation once, while its row is locked."""
+
+    if not order.stock_reserved or order.stock_released:
+        return
+    for item in order.items.select_related("product").select_for_update():
+        product = item.product
+        product.stock += item.quantity
+        product.save(update_fields=["stock"])
+    order.stock_released = True
+
+
+def _cancel_order(order):
+    """Cancel a pending order and release its stock reservation."""
+
+    _release_reserved_stock(order)
+    order.status = "cancelled"
+    order.save(update_fields=["status", "stock_released"])
 
 
 def checkout(request):
@@ -103,6 +131,7 @@ def checkout(request):
                         f"{locked_product.name} are currently in stock."
                     )
                 else:
+                    locked_product.stock -= quantity
                     locked_items.append((locked_product, quantity, size))
 
             if stock_errors:
@@ -127,6 +156,7 @@ def checkout(request):
                 city=data["city"],
                 postal_code=data["postal_code"],
                 total=total,
+                stock_reserved=True,
             )
             OrderItem.objects.bulk_create(
                 [
@@ -140,16 +170,31 @@ def checkout(request):
                     for product, quantity, size in locked_items
                 ]
             )
-            for product, quantity, size in locked_items:
-                product.stock -= quantity
+            for product in locked_products.values():
                 product.save(update_fields=["stock"])
-        request.session['cart'] = {}
+        try:
+            checkout_session = create_checkout_session(order, request)
+        except (StripeConfigurationError, stripe.error.StripeError) as error:
+            with transaction.atomic():
+                order = Order.objects.select_for_update().get(id=order.id)
+                _cancel_order(order)
+            request.session["cart"] = cart
+            request.session.modified = True
+            messages.error(request, f"Unable to start payment: {error}")
+            return render(
+                request,
+                "orders/checkout.html",
+                {"items": items, "total": total, "form": form},
+                status=503,
+            )
+        order.stripe_session_id = checkout_session.id
+        order.save(update_fields=["stripe_session_id"])
+        request.session["pending_cart"] = cart
+        request.session["cart"] = {}
         request.session["recent_order_id"] = order.id
-        messages.success(
-            request,
-            'Order placed successfully. Stripe can be enabled with STRIPE_SECRET_KEY.',
-        )
-        return redirect('orders:success', order_id=order.id)
+        request.session["recent_checkout_session_id"] = checkout_session.id
+        request.session.modified = True
+        return redirect(checkout_session.url)
     return render(
         request,
         "orders/checkout.html",
@@ -163,13 +208,93 @@ def success(request, order_id):
 
     if request.session.get("recent_order_id") != order_id:
         raise Http404("Order confirmation is not available.")
+    session_id = request.GET.get("session_id")
+    if session_id != request.session.get("recent_checkout_session_id"):
+        raise Http404("Order confirmation is not available.")
     order = get_object_or_404(
         Order.objects.prefetch_related("items__product"),
         id=order_id,
     )
     if request.user.is_authenticated and order.user_id != request.user.id:
         raise Http404("Order confirmation is not available.")
+    if order.stripe_session_id != session_id:
+        raise Http404("Order confirmation is not available.")
     return render(request, 'orders/success.html', {'order': order})
+
+
+def cancel(request, order_id):
+    """Cancel a pending payment and restore the reserved stock."""
+
+    if request.session.get("recent_order_id") != order_id:
+        raise Http404("Order cancellation is not available.")
+    order = get_object_or_404(Order, id=order_id)
+    if request.user.is_authenticated and order.user_id != request.user.id:
+        raise Http404("Order cancellation is not available.")
+    if order.status == "pending":
+        try:
+            if order.stripe_session_id:
+                expire_checkout_session(order.stripe_session_id)
+        except (StripeConfigurationError, stripe.error.StripeError) as error:
+            messages.error(request, f"Unable to cancel payment: {error}")
+            return redirect("orders:checkout")
+        with transaction.atomic():
+            order = Order.objects.select_for_update().get(id=order.id)
+            _cancel_order(order)
+    pending_cart = request.session.pop("pending_cart", {})
+    request.session["cart"] = pending_cart
+    request.session.modified = True
+    messages.info(request, "Payment was cancelled. Your bag is ready to try again.")
+    return redirect("shop:cart")
+
+
+@csrf_exempt
+@require_POST
+def stripe_webhook(request):
+    """Process Stripe events after verifying their signatures."""
+
+    try:
+        event = verify_webhook(
+            request.body,
+            request.headers.get("Stripe-Signature", ""),
+        )
+    except (
+        ValueError,
+        StripeConfigurationError,
+        stripe.error.SignatureVerificationError,
+    ):
+        return HttpResponseBadRequest("Invalid Stripe webhook.")
+
+    if hasattr(event, "to_dict"):
+        event = event.to_dict()
+    session = event["data"]["object"]
+    if hasattr(session, "to_dict"):
+        session = session.to_dict()
+    order_id = session.get("metadata", {}).get("order_id")
+    if not order_id:
+        return HttpResponse(status=200)
+    try:
+        with transaction.atomic():
+            order = Order.objects.select_for_update().get(id=order_id)
+            event_type = event["type"]
+            if event_type in {
+                "checkout.session.completed",
+                "checkout.session.async_payment_succeeded",
+            }:
+                if (
+                    session.get("payment_status") == "paid"
+                    and order.status == "pending"
+                ):
+                    order.status = "paid"
+                    order.paid_at = timezone.now()
+                    order.save(update_fields=["status", "paid_at"])
+            elif event_type in {
+                "checkout.session.async_payment_failed",
+                "checkout.session.expired",
+            } and order.status == "pending":
+                _cancel_order(order)
+    except Order.DoesNotExist:
+        return HttpResponseBadRequest("Unknown order.")
+    return HttpResponse(status=200)
 
 
 @login_required
