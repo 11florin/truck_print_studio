@@ -41,6 +41,9 @@ if not SECRET_KEY:
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
                          'localhost', '127.0.0.1', 'testserver'])
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_CURRENCY = env("STRIPE_CURRENCY", default="gbp")
 
 
 # Application definition
