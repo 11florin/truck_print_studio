@@ -38,6 +38,9 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS, default='pending')
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stripe_session_id = models.CharField(max_length=255, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    stock_reserved = models.BooleanField(default=False)
+    stock_released = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -56,6 +59,7 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    size = models.CharField(max_length=5, blank=True)
 
     class Meta:
         constraints = [

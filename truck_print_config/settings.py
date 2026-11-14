@@ -15,6 +15,7 @@ import dj_database_url
 import secrets
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,18 +25,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-env = environ.Env(DEBUG=(bool, True))
+env = environ.Env(DEBUG=(bool, False))
 env.read_env(BASE_DIR / '.env')
-SECRET_KEY = env(
-    'SECRET_KEY',
-    default=secrets.token_urlsafe(50),
-)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env('DEBUG', default=False)
+
+SECRET_KEY = env('SECRET_KEY', default=None)
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "SECRET_KEY must be set when DEBUG is False."
+        )
+    SECRET_KEY = secrets.token_urlsafe(50)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
                          'localhost', '127.0.0.1', 'testserver'])
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_CURRENCY = env("STRIPE_CURRENCY", default="gbp")
 
 
 # Application definition
@@ -151,7 +159,7 @@ MAILERS = {
 }
 
 # Media files
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Authentication

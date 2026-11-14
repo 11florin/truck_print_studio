@@ -1,0 +1,56 @@
+{% extends "shop/base.html" %}
+
+{% block title %}{{ form_title }} · Truck Print Studio{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 720px">
+  <p class="text-muted mb-2">{{ product.name }}</p>
+  <h1>{{ form_title }}</h1>
+
+  <form method="post" class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label" for="rating-5">Rating</label>
+      <div class="rating-stars" role="radiogroup" aria-label="Product rating">
+        {% for value in "54321" %}
+          <input
+            type="radio"
+            name="rating"
+            value="{{ value }}"
+            id="rating-{{ value }}"
+            {% if form.rating.value|stringformat:"s" == value %}checked{% endif %}
+          />
+          <label for="rating-{{ value }}" title="{{ value }} out of 5">
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <span class="visually-hidden">{{ value }} out of 5</span>
+          </label>
+        {% endfor %}
+      </div>
+      {% if form.rating.errors %}
+        <div class="text-danger small mt-2">
+          {{ form.rating.errors }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.comment.id_for_label }}">
+        Comment
+      </label>
+      {{ form.comment }}
+      {% if form.comment.errors %}
+        <div class="text-danger small mt-2">
+          {{ form.comment.errors }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-dark">{{ submit_label }}</button>
+      <a href="{{ product.get_absolute_url }}" class="btn btn-outline-dark">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

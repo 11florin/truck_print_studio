@@ -1,9 +1,56 @@
-{% extends "shop/base.html" %}
+{% extends "shop/base.html" %} 
 
-{% block title %}Truck Print Studio{% endblock %}
+{% block title %}
+    Truck Print Studio - UK road transport POD
+{% endblock %} 
 
 {% block content %}
-
-<h1>Truck Print Studio</h1>
-
+<section class="hero hero-road py-5">
+  <div class="container py-5">
+    <p class="text-uppercase small">Print-on-demand / built for the road</p>
+    <h1 class="display-3 fw-bold">
+      Made for long hauls,<br />rainy motorways and good miles.
+    </h1>
+    <p class="lead col-lg-7">
+      Original UK road transport designs for drivers, dispatchers and everyone
+      who knows the sound of a truck at dawn.
+    </p>
+    <a href="{% url 'shop:list' %}" class="btn btn-light mt-3 px-4"
+      >Shop the road collection</a
+    >
+  </div>
+</section>
+<section class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Featured from the cab</h2>
+    <a href="{% url 'shop:list' %}">View all</a>
+  </div>
+  <div class="row g-4">
+    {% for product in featured %}
+    <div class="col-6 col-lg-3">
+      <div class="card h-100">
+        <div class="ratio ratio-1x1 bg-light">
+          {% if product.image %}<img
+            src="{{ product.image.url }}"
+            class="object-fit-cover"
+            alt="{{ product.name }}"
+          />{% endif %}
+        </div>
+        <div class="card-body">
+          <span class="badge text-bg-light"
+            >{{ product.get_product_type_display }}</span
+          >
+          <h5>{{ product.name }}</h5>
+          <p class="text-muted">£{{ product.price }}</p>
+          <a href="{{ product.get_absolute_url }}" class="stretched-link"></a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">
+      Run the demo seed command to load the first road transport collection.
+    </p>
+    {% endfor %}
+  </div>
+</section>
 {% endblock %}
