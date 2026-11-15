@@ -1,22 +1,23 @@
 """ Views for account creation and authentication. """
 
 from django.contrib.auth import login
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+
+from .forms import RegistrationForm
 
 
 def register(request):
     """Display the account form and authenticate the user upon success."""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegistrationForm(request.POST)
 
         if form.is_valid():
             user = form.save()
             login(request, user)
             return redirect('shop:home')
     else:
-        form = UserCreationForm()
+        form = RegistrationForm()
 
     return render(request, 'accounts/register.html', {
         'form': form,

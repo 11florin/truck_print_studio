@@ -30,6 +30,7 @@ class AuthenticationTests(TestCase):
             reverse("accounts:register"),
             {
                 "username": "new-user",
+                "email": "new-user@example.com",
                 "password1": "Strong-password-123",
                 "password2": "Strong-password-123",
             },
@@ -44,6 +45,7 @@ class AuthenticationTests(TestCase):
             reverse("accounts:register"),
             {
                 "username": "new-user",
+                "email": "new-user@example.com",
                 "password1": "Strong-password-123",
                 "password2": "Different-password-123",
             },
@@ -78,6 +80,7 @@ class AuthenticationTests(TestCase):
             reverse("accounts:register"),
             {
                 "username": "existing",
+                "email": "existing@example.com",
                 "password1": "Strong-password-123",
                 "password2": "Strong-password-123",
             },
