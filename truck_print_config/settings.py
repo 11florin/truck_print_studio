@@ -44,6 +44,11 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 STRIPE_CURRENCY = env("STRIPE_CURRENCY", default="gbp")
+RESEND_API_KEY = env("RESEND_API_KEY", default="")
+DEFAULT_FROM_EMAIL = env(
+    "DEFAULT_FROM_EMAIL",
+    default="Truck Print Studio <onboarding@resend.dev>",
+)
 
 
 # Application definition
@@ -170,11 +175,7 @@ if not DEBUG:
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+EMAIL_BACKEND = "accounts.email_backend.ResendEmailBackend"
 
 # Media files
 MEDIA_URL = '/media/'
