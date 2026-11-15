@@ -1,9 +1,30 @@
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 
 class AuthenticationTests(TestCase):
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_password_reset_sends_email(self):
+        user = User.objects.create_user(
+            username="customer",
+            email="customer@example.com",
+            password="Strong-password-123",
+        )
+
+        response = self.client.post(
+            reverse("accounts:password_reset"),
+            {"email": user.email},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:password_reset_done"),
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("reset", mail.outbox[0].subject.lower())
+
     def test_register_creates_and_logs_in_user(self):
         response = self.client.post(
             reverse("accounts:register"),
