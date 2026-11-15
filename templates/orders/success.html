@@ -19,6 +19,13 @@
         <div class="card-body">
           <h2 class="h5">Order details</h2>
           <p class="mb-1"><strong>Status:</strong> {{ order.get_status_display }}</p>
+          <p class="mb-1"><strong>Transaction number:</strong>
+            {% if order.stripe_payment_intent_id %}
+              {{ order.stripe_payment_intent_id }}
+            {% else %}
+              Pending confirmation from Stripe
+            {% endif %}
+          </p>
           <p class="mb-4"><strong>Total:</strong> £{{ order.total|floatformat:2 }}</p>
           {% for item in order.items.all %}
           <div class="d-flex justify-content-between border-top py-3">

@@ -46,6 +46,18 @@
           <p class="mb-0">{{ order.city }}, {{ order.postal_code }}</p>
         </div>
       </div>
+      <div class="card mt-4">
+        <div class="card-body">
+          <h2 class="h5">Payment details</h2>
+          <p class="mb-0"><strong>Transaction number:</strong>
+            {% if order.stripe_payment_intent_id %}
+              {{ order.stripe_payment_intent_id }}
+            {% else %}
+              Pending confirmation from Stripe
+            {% endif %}
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 
