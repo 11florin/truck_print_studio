@@ -2,6 +2,7 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,10 +11,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 import stripe
+from resend.exceptions import ResendError
+import logging
 
 from .forms import CheckoutForm
 from shop.models import Product
 from .models import Order, OrderItem
+from .email_service import send_order_confirmation
 from .stripe_service import (
     StripeConfigurationError,
     create_checkout_session,
@@ -22,6 +26,8 @@ from .stripe_service import (
 )
 
 from decimal import Decimal
+
+logger = logging.getLogger(__name__)
 
 def _cancel_order(order):
     """Cancel a pending order."""
@@ -219,6 +225,7 @@ def stripe_webhook(request):
     if not order_id:
         return HttpResponse(status=200)
     try:
+        send_confirmation = False
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id)
             event_type = event["type"]
@@ -232,7 +239,23 @@ def stripe_webhook(request):
                 ):
                     order.status = "paid"
                     order.paid_at = timezone.now()
-                    order.save(update_fields=["status", "paid_at"])
+                    payment_intent_id = session.get("payment_intent")
+                    if payment_intent_id:
+                        order.stripe_payment_intent_id = payment_intent_id
+                    update_fields = ["status", "paid_at"]
+                    if payment_intent_id:
+                        update_fields.append("stripe_payment_intent_id")
+                    order.save(update_fields=update_fields)
+                    send_confirmation = True
+            elif (
+                event_type in {
+                    "checkout.session.completed",
+                    "checkout.session.async_payment_succeeded",
+                }
+                and order.status == "paid"
+                and not order.confirmation_email_sent
+            ):
+                send_confirmation = True
             elif event_type in {
                 "checkout.session.async_payment_failed",
                 "checkout.session.expired",
@@ -240,6 +263,19 @@ def stripe_webhook(request):
                 _cancel_order(order)
     except Order.DoesNotExist:
         return HttpResponseBadRequest("Unknown order.")
+    if send_confirmation and settings.RESEND_API_KEY:
+        try:
+            send_order_confirmation(order)
+        except ResendError:
+            logger.exception("Resend failed for order %s.", order.id)
+            return HttpResponse(status=503)
+        order.confirmation_email_sent = True
+        order.save(update_fields=["confirmation_email_sent"])
+    elif send_confirmation:
+        logger.warning(
+            "Skipping confirmation email for order %s: RESEND_API_KEY is missing.",
+            order.id,
+        )
     return HttpResponse(status=200)
 
 
