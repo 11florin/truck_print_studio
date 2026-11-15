@@ -38,6 +38,8 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS, default='pending')
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stripe_session_id = models.CharField(max_length=255, blank=True)
+    stripe_payment_intent_id = models.CharField(max_length=255, blank=True)
+    confirmation_email_sent = models.BooleanField(default=False)
     paid_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
