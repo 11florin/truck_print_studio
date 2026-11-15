@@ -123,6 +123,7 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(item.size, "")
 
+    @override_settings(RESEND_API_KEY="re_test_key")
     def test_webhook_marks_order_paid_once(self):
         order = Order.objects.create(
             email="customer@example.com",
@@ -146,11 +147,15 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
                 "object": {
                     "metadata": {"order_id": str(order.id)},
                     "payment_status": "paid",
+                    "payment_intent": "pi_test_transaction",
                 }
             },
         }
 
-        with patch("orders.views.verify_webhook", return_value=event):
+        with (
+            patch("orders.views.verify_webhook", return_value=event),
+            patch("orders.views.send_order_confirmation") as send_confirmation,
+        ):
             first_response = self.client.post(
                 reverse("orders:stripe_webhook"),
                 b"stripe-payload",
@@ -169,6 +174,12 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
         self.assertEqual(second_response.status_code, 200)
         self.assertEqual(order.status, "paid")
         self.assertIsNotNone(order.paid_at)
+        self.assertEqual(
+            order.stripe_payment_intent_id,
+            "pi_test_transaction",
+        )
+        self.assertTrue(order.confirmation_email_sent)
+        send_confirmation.assert_called_once_with(order)
 
     def test_expired_webhook_cancels_order(self):
         order = Order.objects.create(
