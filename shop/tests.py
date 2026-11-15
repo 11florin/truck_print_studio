@@ -15,7 +15,6 @@ class ShopTestDataMixin:
             "product_type": "tshirt",
             "description": "A lorry design for road transport.",
             "price": Decimal("12.50"),
-            "stock": 5,
             "active": True,
             "featured": False,
         }
@@ -148,14 +147,14 @@ class CartTests(ShopTestDataMixin, TestCase):
         self.assertRedirects(invalid_quantity, reverse("shop:cart"))
         self.assertEqual(self.client.session["cart"], {})
 
-    def test_cart_caps_quantity_at_stock(self):
+    def test_cart_allows_unlimited_quantity(self):
         response = self.client.post(
             reverse("shop:cart_add", args=[self.product.id]),
             {"size": "L", "quantity": 99},
         )
 
         self.assertRedirects(response, reverse("shop:cart"))
-        self.assertEqual(self.client.session["cart"], {f"{self.product.id}:L": 5})
+        self.assertEqual(self.client.session["cart"], {f"{self.product.id}:L": 99})
 
     def test_mug_can_be_added_without_a_size(self):
         mug = self.create_product(name="Road Mug", product_type="mug")

@@ -39,7 +39,6 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     compare_at_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     image = models.ImageField(upload_to='products/', blank=True)
-    stock = models.PositiveIntegerField(default=0)
     made_to_order = models.BooleanField(default=True)
     featured = models.BooleanField(default=False)
     active = models.BooleanField(default=True)

@@ -19,7 +19,6 @@ class OrderTestDataMixin:
             "product_type": "tshirt",
             "description": "A checkout test product.",
             "price": Decimal("10.99"),
-            "stock": 3,
             "active": True,
         }
         defaults.update(overrides)
@@ -75,9 +74,6 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
         self.assertEqual(item.quantity, 2)
         self.assertEqual(order.total, Decimal("21.98"))
         self.assertEqual(order.status, "pending")
-        self.assertTrue(order.stock_reserved)
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.stock, 1)
         self.assertEqual(self.client.session["cart"], {})
 
     def test_checkout_rejects_invalid_input(self):
@@ -91,7 +87,7 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Order.objects.count(), 0)
 
-    def test_checkout_rejects_quantity_above_stock(self):
+    def test_checkout_allows_unlimited_quantity(self):
         self.add_to_cart(quantity=4)
 
         response = self.client.post(
@@ -99,8 +95,8 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
             self.checkout_data(),
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(Order.objects.count(), 0)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Order.objects.get().items.get().quantity, 4)
 
     def test_empty_cart_can_be_viewed_but_cannot_create_order(self):
         get_response = self.client.get(reverse("orders:checkout"))
@@ -136,7 +132,6 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
             postal_code="SW1A 1AA",
             total=self.product.price,
             stripe_session_id="cs_paid",
-            stock_reserved=True,
         )
         OrderItem.objects.create(
             order=order,
@@ -175,9 +170,7 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
         self.assertEqual(order.status, "paid")
         self.assertIsNotNone(order.paid_at)
 
-    def test_expired_webhook_releases_reserved_stock(self):
-        self.product.stock = 2
-        self.product.save(update_fields=["stock"])
+    def test_expired_webhook_cancels_order(self):
         order = Order.objects.create(
             email="customer@example.com",
             full_name="Test Customer",
@@ -186,7 +179,6 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
             postal_code="SW1A 1AA",
             total=self.product.price,
             stripe_session_id="cs_expired",
-            stock_reserved=True,
         )
         OrderItem.objects.create(
             order=order,
@@ -213,11 +205,8 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
             )
 
         order.refresh_from_db()
-        self.product.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(order.status, "cancelled")
-        self.assertTrue(order.stock_released)
-        self.assertEqual(self.product.stock, 3)
 
     def test_webhook_rejects_invalid_signature(self):
         with patch(
@@ -233,16 +222,14 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-    def test_cancel_releases_reserved_stock_and_restores_cart(self):
+    def test_cancel_order_restores_cart(self):
         self.add_to_cart(quantity=1, size="M")
         checkout_response = self.client.post(
             reverse("orders:checkout"),
             self.checkout_data(),
         )
         order = Order.objects.get()
-        self.product.refresh_from_db()
         self.assertEqual(checkout_response.status_code, 302)
-        self.assertEqual(self.product.stock, 2)
 
         with patch("orders.views.expire_checkout_session") as expire_session:
             response = self.client.get(
@@ -250,12 +237,9 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
             )
 
         order.refresh_from_db()
-        self.product.refresh_from_db()
         self.assertRedirects(response, reverse("shop:cart"))
         expire_session.assert_called_once_with("cs_test_order")
         self.assertEqual(order.status, "cancelled")
-        self.assertTrue(order.stock_released)
-        self.assertEqual(self.product.stock, 3)
         self.assertEqual(self.client.session["cart"], {f"{self.product.id}:M": 1})
 
 

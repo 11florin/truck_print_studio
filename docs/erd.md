@@ -23,7 +23,7 @@ erDiagram
         string slug UK
         string product_type
         decimal price
-        int stock
+
         boolean active
     }
     ORDER {
@@ -34,8 +34,6 @@ erDiagram
         decimal total
         string stripe_session_id
         datetime paid_at
-        boolean stock_reserved
-        boolean stock_released
     }
     ORDER_ITEM {
         bigint id PK
