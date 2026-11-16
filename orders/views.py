@@ -1,8 +1,13 @@
-""" Views for the store's checkout flow. """
+"""Views for the store's checkout flow."""
 
+import logging
+from decimal import Decimal
+from smtplib import SMTPException
+
+import stripe
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,14 +15,12 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-import stripe
 from resend.exceptions import ResendError
-import logging
 
 from .forms import CheckoutForm
-from shop.models import Product
-from .models import Order, OrderItem
 from .email_service import send_order_confirmation
+from .models import Order, OrderItem
+from shop.models import Product
 from .stripe_service import (
     StripeConfigurationError,
     create_checkout_session,
@@ -25,9 +28,8 @@ from .stripe_service import (
     verify_webhook,
 )
 
-from decimal import Decimal
-
 logger = logging.getLogger(__name__)
+
 
 def _cancel_order(order):
     """Cancel a pending order."""
@@ -218,17 +220,22 @@ def stripe_webhook(request):
 
     if hasattr(event, "to_dict"):
         event = event.to_dict()
-    session = event["data"]["object"]
+    try:
+        event_type = event["type"]
+        session = event["data"]["object"]
+    except (KeyError, TypeError):
+        return HttpResponseBadRequest("Invalid Stripe event.")
     if hasattr(session, "to_dict"):
         session = session.to_dict()
-    order_id = session.get("metadata", {}).get("order_id")
+    if not isinstance(session, dict):
+        return HttpResponseBadRequest("Invalid Stripe event.")
+    order_id = (session.get("metadata") or {}).get("order_id")
     if not order_id:
         return HttpResponse(status=200)
     try:
         send_confirmation = False
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id)
-            event_type = event["type"]
             if event_type in {
                 "checkout.session.completed",
                 "checkout.session.async_payment_succeeded",
@@ -263,19 +270,19 @@ def stripe_webhook(request):
                 _cancel_order(order)
     except Order.DoesNotExist:
         return HttpResponseBadRequest("Unknown order.")
-    if send_confirmation and settings.RESEND_API_KEY:
+    if send_confirmation:
         try:
             send_order_confirmation(order)
-        except ResendError:
-            logger.exception("Resend failed for order %s.", order.id)
+        except (
+            ImproperlyConfigured,
+            OSError,
+            ResendError,
+            SMTPException,
+        ):
+            logger.exception("Order confirmation email failed for order %s.", order.id)
             return HttpResponse(status=503)
         order.confirmation_email_sent = True
         order.save(update_fields=["confirmation_email_sent"])
-    elif send_confirmation:
-        logger.warning(
-            "Skipping confirmation email for order %s: RESEND_API_KEY is missing.",
-            order.id,
-        )
     return HttpResponse(status=200)
 
 
