@@ -6,7 +6,14 @@ from .views import profile, register
 app_name = 'accounts'
 
 urlpatterns = [
-    path("login/", auth_views.LoginView.as_view(template_name="accounts/login.html"),name="login",),
+    path(
+        "login/",
+        auth_views.LoginView.as_view(
+            template_name="accounts/login.html",
+            redirect_authenticated_user=True,
+        ),
+        name="login",
+    ),
     path(
         "password-reset/",
         auth_views.PasswordResetView.as_view(

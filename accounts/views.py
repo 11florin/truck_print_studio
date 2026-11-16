@@ -9,6 +9,8 @@ from .forms import RegistrationForm
 
 def register(request):
     """Display the account form and authenticate the user upon success."""
+    if request.user.is_authenticated:
+        return redirect("shop:home")
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
 
