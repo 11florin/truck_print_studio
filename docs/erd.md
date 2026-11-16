@@ -23,7 +23,7 @@ erDiagram
         string slug UK
         string product_type
         decimal price
-
+        string image
         boolean active
     }
     ORDER {
@@ -33,6 +33,8 @@ erDiagram
         string status
         decimal total
         string stripe_session_id
+        string stripe_payment_intent_id
+        boolean confirmation_email_sent
         datetime paid_at
     }
     ORDER_ITEM {
