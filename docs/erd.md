@@ -1,6 +1,6 @@
 # Entity relationship diagram
 
-```mermaid
+```
 erDiagram
     USER ||--o{ WISHLIST : saves
     USER ||--o{ REVIEW : writes

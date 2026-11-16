@@ -90,7 +90,4 @@ from being the source of truth for payment or order status.
 
 ## Manual distinction evidence
 
-Before submission, capture the screens listed in
-[screenshots.md](./screenshots.md), including a mobile view, a failed
-validation/payment scenario, the custom 404 redirect, a successful order and
-the deployed service. Hide personal data and secrets in every capture.
+

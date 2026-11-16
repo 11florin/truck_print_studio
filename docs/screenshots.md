@@ -1,30 +1,22 @@
 # Screenshot checklist
 
-Capture these screens after deployment and add the images to a
-`docs/screenshots/` directory:
 
-1. Home page with featured products.
-2. Catalogue with search and filters.
-3. Product page with size selection.
-4. Bag showing product image, quantity and size.
-5. Stripe test checkout page.
-6. Successful order confirmation with `Paid` status.
-7. Wishlist page for an authenticated user.
-8. Order history page.
-9. Heroku deployment dashboard showing a healthy service.
-10. Django admin showing product/category management.
-11. Password reset form and confirmation message (hide the email address).
-12. Stripe webhook delivery showing an HTTP 200 response.
-13. Order confirmation email showing order number, total and transaction ID
-    (hide personal information).
-14. Missing URL showing the informative redirect back to the shop.
-15. Mobile navigation and checkout layout.
-16. Failed form validation and a failed/cancelled payment message.
+1. ![Home page with featured products](/media/screenshots/home-page-featured.png).
+2. ![Catalogue with search and filters](/media/screenshots/collection-search-filters.png.png)
+3. ![Product page with size selection](/media/screenshots/product-size-selection.png)
+4. ![Bag showing product image, quantity and size](/media/screenshots/product-quantity-size.png)
+5. ![Stripe test checkout page](/media/screenshots/stripe-test-checkout.png)
+6. ![Successful order confirmation with `Paid` status](/media/screenshots/successful-paid.png)
+7. ![Wishlist page for an authenticated user](/media/screenshots/wishlist-authenticated-user.png)
+8. ![Order history page](/media/screenshots/order-history.png)
+9. 
+10. ![Django admin showing product/category management](/media/screenshots/admin-product-category.png)
+11. ![Password reset form and confirmation message](/media/screenshots/confirmation-password-reset.png)
+12. ![Email password reset](/media/screenshots/password-link-reset.png)
+13. 
+14. ![Order confirmation email showing order number, total and transaction ID](/media/screenshots/email-confirmation.png)
+15. Missing URL showing the informative redirect back to the shop.
+16. Mobile navigation and checkout layout.
+17. Failed form validation and a failed/cancelled payment message.
 
-Use descriptive filenames, for example `01-home.png` and
-`06-order-paid.png`. Do not include API keys, customer data or personal
-information in screenshots.
 
-For distinction evidence, keep the screenshots together with any HTML/CSS
-validator or JavaScript lint reports and record the date, environment and
-result in the submission notes.
