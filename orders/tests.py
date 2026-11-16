@@ -233,6 +233,20 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_webhook_rejects_malformed_verified_event(self):
+        with patch(
+            "orders.views.verify_webhook",
+            return_value={"type": "checkout.session.completed"},
+        ):
+            response = self.client.post(
+                reverse("orders:stripe_webhook"),
+                b"stripe-payload",
+                content_type="application/json",
+                HTTP_STRIPE_SIGNATURE="signature",
+            )
+
+        self.assertEqual(response.status_code, 400)
+
     def test_cancel_order_restores_cart(self):
         self.add_to_cart(quantity=1, size="M")
         checkout_response = self.client.post(
