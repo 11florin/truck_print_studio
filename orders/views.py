@@ -1,7 +1,13 @@
-""" Views for the store's checkout flow. """
+"""Views for the store's checkout flow."""
 
+import logging
+from decimal import Decimal
+from smtplib import SMTPException
+
+import stripe
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -9,11 +15,12 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-import stripe
+from resend.exceptions import ResendError
 
 from .forms import CheckoutForm
-from shop.models import Product
+from .email_service import send_order_confirmation
 from .models import Order, OrderItem
+from shop.models import Product
 from .stripe_service import (
     StripeConfigurationError,
     create_checkout_session,
@@ -21,26 +28,14 @@ from .stripe_service import (
     verify_webhook,
 )
 
-from decimal import Decimal
-
-def _release_reserved_stock(order):
-    """Release an order's reservation once, while its row is locked."""
-
-    if not order.stock_reserved or order.stock_released:
-        return
-    for item in order.items.select_related("product").select_for_update():
-        product = item.product
-        product.stock += item.quantity
-        product.save(update_fields=["stock"])
-    order.stock_released = True
+logger = logging.getLogger(__name__)
 
 
 def _cancel_order(order):
-    """Cancel a pending order and release its stock reservation."""
+    """Cancel a pending order."""
 
-    _release_reserved_stock(order)
     order.status = "cancelled"
-    order.save(update_fields=["status", "stock_released"])
+    order.save(update_fields=["status"])
 
 
 def checkout(request):
@@ -61,35 +56,31 @@ def checkout(request):
     products = Product.objects.filter(id__in=product_ids, active=True)
     products_by_id = {product.id: product for product in products}
     items = []
-    stock_errors = []
+    checkout_errors = []
     for product_id, size, raw_quantity in cart_entries:
         product = products_by_id.get(product_id)
         if product is None:
-            stock_errors.append("One or more products in your bag are no longer available.")
+            checkout_errors.append("One or more products in your bag are no longer available.")
             continue
         try:
             quantity = int(raw_quantity)
         except (KeyError, TypeError, ValueError):
-            stock_errors.append(f"{product.name} has an invalid quantity.")
+            checkout_errors.append(f"{product.name} has an invalid quantity.")
             continue
         if quantity <= 0:
-            stock_errors.append(f"{product.name} must have a positive quantity.")
-        elif quantity > product.stock:
-            stock_errors.append(
-                f"Only {product.stock} of {product.name} are currently in stock."
-            )
+            checkout_errors.append(f"{product.name} must have a positive quantity.")
         else:
             items.append((product, quantity, size))
 
     missing_product_ids = product_ids - set(products_by_id)
     if missing_product_ids:
-        stock_errors.append("One or more products in your bag are no longer available.")
+        checkout_errors.append("One or more products in your bag are no longer available.")
 
     total = sum((p.price * quantity for p, quantity, size in items), Decimal('0'))
     form = CheckoutForm(request.POST or None)
-    if request.method == "POST" and (items or stock_errors):
-        if stock_errors:
-            for error in stock_errors:
+    if request.method == "POST" and (items or checkout_errors):
+        if checkout_errors:
+            for error in checkout_errors:
                 messages.error(request, error)
             return render(
                 request,
@@ -110,42 +101,8 @@ def checkout(request):
             )
         data = form.cleaned_data
         with transaction.atomic():
-            locked_products = {
-                product.id: product
-                for product in Product.objects.select_for_update().filter(
-                    id__in=[product.id for product, quantity, size in items],
-                    active=True,
-                )
-            }
-            locked_items = []
-            stock_errors = []
-            for product, quantity, size in items:
-                locked_product = locked_products.get(product.id)
-                if locked_product is None:
-                    stock_errors.append(
-                        f"{product.name} is no longer available."
-                    )
-                elif quantity > locked_product.stock:
-                    stock_errors.append(
-                        f"Only {locked_product.stock} of "
-                        f"{locked_product.name} are currently in stock."
-                    )
-                else:
-                    locked_product.stock -= quantity
-                    locked_items.append((locked_product, quantity, size))
-
-            if stock_errors:
-                for error in stock_errors:
-                    messages.error(request, error)
-                return render(
-                    request,
-                    "orders/checkout.html",
-                    {"items": items, "total": total, "form": form},
-                    status=400,
-                )
-
             total = sum(
-                (product.price * quantity for product, quantity, size in locked_items),
+                (product.price * quantity for product, quantity, size in items),
                 Decimal("0"),
             )
             order = Order.objects.create(
@@ -156,7 +113,6 @@ def checkout(request):
                 city=data["city"],
                 postal_code=data["postal_code"],
                 total=total,
-                stock_reserved=True,
             )
             OrderItem.objects.bulk_create(
                 [
@@ -167,11 +123,9 @@ def checkout(request):
                         price=product.price,
                         size=size,
                     )
-                    for product, quantity, size in locked_items
+                    for product, quantity, size in items
                 ]
             )
-            for product in locked_products.values():
-                product.save(update_fields=["stock"])
         try:
             checkout_session = create_checkout_session(order, request)
         except (StripeConfigurationError, stripe.error.StripeError) as error:
@@ -223,7 +177,7 @@ def success(request, order_id):
 
 
 def cancel(request, order_id):
-    """Cancel a pending payment and restore the reserved stock."""
+    """Cancel a pending payment and restore the pending cart."""
 
     if request.session.get("recent_order_id") != order_id:
         raise Http404("Order cancellation is not available.")
@@ -266,16 +220,22 @@ def stripe_webhook(request):
 
     if hasattr(event, "to_dict"):
         event = event.to_dict()
-    session = event["data"]["object"]
+    try:
+        event_type = event["type"]
+        session = event["data"]["object"]
+    except (KeyError, TypeError):
+        return HttpResponseBadRequest("Invalid Stripe event.")
     if hasattr(session, "to_dict"):
         session = session.to_dict()
-    order_id = session.get("metadata", {}).get("order_id")
+    if not isinstance(session, dict):
+        return HttpResponseBadRequest("Invalid Stripe event.")
+    order_id = (session.get("metadata") or {}).get("order_id")
     if not order_id:
         return HttpResponse(status=200)
     try:
+        send_confirmation = False
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id)
-            event_type = event["type"]
             if event_type in {
                 "checkout.session.completed",
                 "checkout.session.async_payment_succeeded",
@@ -286,7 +246,23 @@ def stripe_webhook(request):
                 ):
                     order.status = "paid"
                     order.paid_at = timezone.now()
-                    order.save(update_fields=["status", "paid_at"])
+                    payment_intent_id = session.get("payment_intent")
+                    if payment_intent_id:
+                        order.stripe_payment_intent_id = payment_intent_id
+                    update_fields = ["status", "paid_at"]
+                    if payment_intent_id:
+                        update_fields.append("stripe_payment_intent_id")
+                    order.save(update_fields=update_fields)
+                    send_confirmation = True
+            elif (
+                event_type in {
+                    "checkout.session.completed",
+                    "checkout.session.async_payment_succeeded",
+                }
+                and order.status == "paid"
+                and not order.confirmation_email_sent
+            ):
+                send_confirmation = True
             elif event_type in {
                 "checkout.session.async_payment_failed",
                 "checkout.session.expired",
@@ -294,6 +270,19 @@ def stripe_webhook(request):
                 _cancel_order(order)
     except Order.DoesNotExist:
         return HttpResponseBadRequest("Unknown order.")
+    if send_confirmation:
+        try:
+            send_order_confirmation(order)
+        except (
+            ImproperlyConfigured,
+            OSError,
+            ResendError,
+            SMTPException,
+        ):
+            logger.exception("Order confirmation email failed for order %s.", order.id)
+            return HttpResponse(status=503)
+        order.confirmation_email_sent = True
+        order.save(update_fields=["confirmation_email_sent"])
     return HttpResponse(status=200)
 
 

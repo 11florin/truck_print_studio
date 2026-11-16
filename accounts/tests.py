@@ -1,14 +1,36 @@
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 
 class AuthenticationTests(TestCase):
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_password_reset_sends_email(self):
+        user = User.objects.create_user(
+            username="customer",
+            email="customer@example.com",
+            password="Strong-password-123",
+        )
+
+        response = self.client.post(
+            reverse("accounts:password_reset"),
+            {"email": user.email},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:password_reset_done"),
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("reset", mail.outbox[0].subject.lower())
+
     def test_register_creates_and_logs_in_user(self):
         response = self.client.post(
             reverse("accounts:register"),
             {
                 "username": "new-user",
+                "email": "new-user@example.com",
                 "password1": "Strong-password-123",
                 "password2": "Strong-password-123",
             },
@@ -23,6 +45,7 @@ class AuthenticationTests(TestCase):
             reverse("accounts:register"),
             {
                 "username": "new-user",
+                "email": "new-user@example.com",
                 "password1": "Strong-password-123",
                 "password2": "Different-password-123",
             },
@@ -57,6 +80,7 @@ class AuthenticationTests(TestCase):
             reverse("accounts:register"),
             {
                 "username": "existing",
+                "email": "existing@example.com",
                 "password1": "Strong-password-123",
                 "password2": "Strong-password-123",
             },
@@ -86,3 +110,31 @@ class AuthenticationTests(TestCase):
             response,
             f"{reverse('accounts:login')}?next={reverse('accounts:profile')}",
         )
+
+    def test_authenticated_user_cannot_open_login_or_register_pages(self):
+        user = User.objects.create_user(
+            username="customer",
+            password="Strong-password-123",
+        )
+        self.client.force_login(user)
+
+        self.assertRedirects(
+            self.client.get(reverse("accounts:login")),
+            reverse("shop:home"),
+        )
+        self.assertRedirects(
+            self.client.get(reverse("accounts:register")),
+            reverse("shop:home"),
+        )
+
+    def test_regular_user_cannot_access_admin_data_store(self):
+        user = User.objects.create_user(
+            username="customer",
+            password="Strong-password-123",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("admin:index"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin/login/", response["Location"])

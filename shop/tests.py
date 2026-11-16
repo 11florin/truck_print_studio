@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .models import Category, Product, Review, Wishlist
@@ -15,7 +15,6 @@ class ShopTestDataMixin:
             "product_type": "tshirt",
             "description": "A lorry design for road transport.",
             "price": Decimal("12.50"),
-            "stock": 5,
             "active": True,
             "featured": False,
         }
@@ -50,6 +49,32 @@ class CatalogTests(ShopTestDataMixin, TestCase):
         self.assertContains(response, self.featured_product.name)
         self.assertNotContains(response, self.product.name)
         self.assertNotContains(response, self.inactive_product.name)
+
+    def test_home_renders_featured_product_carousel(self):
+        self.create_product(
+            name="Featured Cab T-shirt",
+            featured=True,
+            image="products/cab-shirt.png",
+        )
+        response = self.client.get(reverse("shop:home"))
+
+        self.assertContains(response, 'id="featuredCarousel"')
+        self.assertContains(response, self.featured_product.name)
+        self.assertContains(response, "carousel-control-next")
+
+    @override_settings(DEBUG=False)
+    def test_unknown_url_returns_visitor_to_shop(self):
+        response = self.client.get("/page-that-does-not-exist/")
+
+        self.assertRedirects(response, reverse("shop:home"))
+
+    def test_navigation_uses_current_categories(self):
+        Category.objects.get_or_create(name="Hoodie")
+        Category.objects.get_or_create(name="Mugs")
+        response = self.client.get(reverse("shop:home"))
+
+        self.assertContains(response, "Hoodie")
+        self.assertContains(response, "Mugs")
 
     def test_catalog_shows_active_products(self):
         response = self.client.get(reverse("shop:list"))
@@ -148,14 +173,27 @@ class CartTests(ShopTestDataMixin, TestCase):
         self.assertRedirects(invalid_quantity, reverse("shop:cart"))
         self.assertEqual(self.client.session["cart"], {})
 
-    def test_cart_caps_quantity_at_stock(self):
+    def test_cart_handles_corrupt_existing_quantity(self):
+        session = self.client.session
+        session["cart"] = {f"{self.product.id}:M": "invalid"}
+        session.save()
+
+        response = self.client.post(
+            reverse("shop:cart_add", args=[self.product.id]),
+            {"size": "M", "quantity": 1},
+        )
+
+        self.assertRedirects(response, reverse("shop:cart"))
+        self.assertEqual(self.client.session["cart"], {f"{self.product.id}:M": "invalid"})
+
+    def test_cart_allows_unlimited_quantity(self):
         response = self.client.post(
             reverse("shop:cart_add", args=[self.product.id]),
             {"size": "L", "quantity": 99},
         )
 
         self.assertRedirects(response, reverse("shop:cart"))
-        self.assertEqual(self.client.session["cart"], {f"{self.product.id}:L": 5})
+        self.assertEqual(self.client.session["cart"], {f"{self.product.id}:L": 99})
 
     def test_mug_can_be_added_without_a_size(self):
         mug = self.create_product(name="Road Mug", product_type="mug")

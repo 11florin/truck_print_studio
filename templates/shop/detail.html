@@ -16,7 +16,7 @@
       <h1>{{ product.name }}</h1>
       <h3 class="my-4">£{{ product.price }}</h3>
       <p>{{ product.description }}</p>
-      <p class="small text-muted">Printed to order by {{ product.pod_provider }}.</p>
+      <p class="small text-muted">Printed to order for every journey.</p>
       <form method="post" action="{% url 'shop:cart_add' product.id %}">
         {% csrf_token %}
         <input type="hidden" name="next" value="shop:cart">
@@ -31,7 +31,7 @@
         {% endif %}
         <div class="input-group mb-3" style="max-width:180px">
           <input class="form-control" type="number" name="quantity" value="1"
-                 min="1" max="{{ product.stock }}">
+                 min="1">
           <button class="btn btn-dark">Add to bag</button>
         </div>
       </form>
