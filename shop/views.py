@@ -222,7 +222,15 @@ def cart_add(request, product_id):
     existing_quantity = cart.get(key, 0)
     if isinstance(existing_quantity, dict):
         existing_quantity = existing_quantity.get("quantity", 0)
-    quantity = int(existing_quantity) + requested_quantity
+    try:
+        existing_quantity = int(existing_quantity)
+    except (TypeError, ValueError):
+        messages.error(request, "Your bag could not be updated. Please try again.")
+        return redirect(next_url)
+    if existing_quantity < 0:
+        messages.error(request, "Your bag could not be updated. Please try again.")
+        return redirect(next_url)
+    quantity = existing_quantity + requested_quantity
     if quantity:
         cart[key] = quantity
         request.session.modified = True
