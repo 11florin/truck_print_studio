@@ -1,0 +1,11 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Page not found | Truck Print Studio{% endblock %}
+
+{% block content %}
+<section class="container py-5 text-center" aria-labelledby="not-found-title">
+  <h1 id="not-found-title">Page not found</h1>
+  <p class="lead">The page or product you requested is not available.</p>
+  <a class="btn btn-dark" href="{% url 'shop:home' %}">Return to the shop</a>
+</section>
+{% endblock %}
