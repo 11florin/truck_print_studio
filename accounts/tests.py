@@ -110,3 +110,31 @@ class AuthenticationTests(TestCase):
             response,
             f"{reverse('accounts:login')}?next={reverse('accounts:profile')}",
         )
+
+    def test_authenticated_user_cannot_open_login_or_register_pages(self):
+        user = User.objects.create_user(
+            username="customer",
+            password="Strong-password-123",
+        )
+        self.client.force_login(user)
+
+        self.assertRedirects(
+            self.client.get(reverse("accounts:login")),
+            reverse("shop:home"),
+        )
+        self.assertRedirects(
+            self.client.get(reverse("accounts:register")),
+            reverse("shop:home"),
+        )
+
+    def test_regular_user_cannot_access_admin_data_store(self):
+        user = User.objects.create_user(
+            username="customer",
+            password="Strong-password-123",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("admin:index"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin/login/", response["Location"])
