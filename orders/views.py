@@ -93,10 +93,10 @@ def checkout(request):
             return render(
                 request,
                 "orders/checkout.html", {
-                    "items": items, 
-                    "total": total, 
+                    "items": items,
+                    "total": total,
                     "form": form
-                    },
+                },
                 status=400,
             )
         data = form.cleaned_data
@@ -154,7 +154,6 @@ def checkout(request):
         "orders/checkout.html",
         {"items": items, "total": total, "form": form},
     )
-
 
 
 def success(request, order_id):

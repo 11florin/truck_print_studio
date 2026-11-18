@@ -13,7 +13,6 @@ from .models import Category, Product, Review, Wishlist
 from decimal import Decimal
 
 
-
 # Create your views here.
 def _cart(request):
     """ Returns the session cart, initializing it if it is missing. """

@@ -16,7 +16,6 @@ class Category(models.Model):
         ordering = ["name"]
         verbose_name_plural = "categories"
 
-
     def save(self, *args, **kwargs):
         self.slug = self.slug or slugify(self.name)
         super().save(*args, **kwargs)
@@ -27,7 +26,6 @@ class Category(models.Model):
 
 class Product(models.Model):
     """ POD product displayed in the catalog, product detail, wishlist, and checkout. """
-    
     PRODUCT_TYPES = [('tshirt', 'T-shirt'), ('hoodie', 'Hoodie'), ('mug', 'Mug')]
     SIZE_CHOICES = [('S', 'S'), ('M', 'M'), ('L', 'L'), ('XL', 'XL'), ('XXL', 'XXL')]
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
@@ -44,7 +42,6 @@ class Product(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-
     class Meta:
         ordering = ['-created_at']
         constraints = [
@@ -53,7 +50,6 @@ class Product(models.Model):
                 name='product_price_non_negative',
             ),
         ]
-
 
     def save(self, *args, **kwargs):
         self.slug = self.slug or slugify(self.name)

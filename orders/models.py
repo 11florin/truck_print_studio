@@ -6,7 +6,9 @@ from shop.models import Product
 
 # Create your models here.
 
+
 class Coupon(models.Model):
+
     """ Promotional code that can be activated until a certain date. """
     code = models.CharField(max_length=40, unique=True)
     discount_percent = models.PositiveSmallIntegerField()

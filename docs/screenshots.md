@@ -33,7 +33,7 @@
 17. JavaScript validation is not applicable because there are no custom
     JavaScript files or inline application JavaScript; Bootstrap and Font
     Awesome are loaded through external CDNs.
-18. PEP 8 evidence from `flake8` for the Python source files.
+18. ![PEP 8 evidence from `flake8` for the Python source files.](/media/screenshots/flake8-pip8-validator.png)
 19. Lighthouse desktop evidence covering performance, accessibility,
     best practices and SEO.
 20. Lighthouse mobile evidence covering performance, accessibility,

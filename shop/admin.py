@@ -3,6 +3,7 @@ from .models import Category, Product, Review, Wishlist
 
 # Register your models here.
 
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {
