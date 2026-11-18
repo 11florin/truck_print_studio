@@ -15,7 +15,7 @@
 12. ![Email password reset](/media/screenshots/password-link-reset.png)
 13. 
 14. ![Order confirmation email showing order number, total and transaction ID](/media/screenshots/email-confirmation.png)
-15. ![Nu Html Checker Home page.](/media/screenshots/home-validator.png.png)
+15. ![Nu Html Checker Home page.](/media/screenshots/home-validator.png)
 ![Nu Html Checker Categories all](/media/screenshots/categories-all-validator.png)
 ![Nu Html Checker Categories Hoodie](/media/screenshots/categories-hoodie.png)
 ![Nu Html Checker Categories Mugs](/media/screenshots/categories-mugs.png)
@@ -23,12 +23,17 @@
 ![Nu Html Checker Categories T-shirts](/media/screenshots/categories-t-shirts.png)
 ![Nu Html Checker Bag page](/media/screenshots/bag-validator.png)
 ![Nu Html Checker Login page](/media/screenshots/login-validator.png)
+![Nu Html Checker Register page](/media/screenshots/register-validator.png)
 
-16. W3C CSS validator evidence for the project stylesheet.
+## Rgisterd Users
+![Nu Html Checker Orders history page](/media/screenshots/orders-validator.png)
+![Nu Html Checker Wishlist page](/media/screenshots/wishlist-validator.png)
+![Nu Html Checker My Account page](/media/screenshots/my-account-validator.png)
+16. ![W3C CSS validator evidence for the project stylesheet.](/media/screenshots/css-validator.png)
 17. JavaScript validation is not applicable because there are no custom
     JavaScript files or inline application JavaScript; Bootstrap and Font
     Awesome are loaded through external CDNs.
-18. PEP 8 evidence from `pycodestyle` or `flake8` for the Python source files.
+18. PEP 8 evidence from `flake8` for the Python source files.
 19. Lighthouse desktop evidence covering performance, accessibility,
     best practices and SEO.
 20. Lighthouse mobile evidence covering performance, accessibility,
