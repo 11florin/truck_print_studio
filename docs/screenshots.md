@@ -16,6 +16,14 @@
 13. 
 14. ![Order confirmation email showing order number, total and transaction ID](/media/screenshots/email-confirmation.png)
 15. ![Nu Html Checker Home page.](/media/screenshots/home-validator.png.png)
+![Nu Html Checker Categories all](/media/screenshots/categories-all-validator.png)
+![Nu Html Checker Categories Hoodie](/media/screenshots/categories-hoodie.png)
+![Nu Html Checker Categories Mugs](/media/screenshots/categories-mugs.png)
+![Nu Html Checker Categories Sweatshirt](/media/screenshots/categories-sweatshirt.png)
+![Nu Html Checker Categories T-shirts](/media/screenshots/categories-t-shirts.png)
+![Nu Html Checker Bag page](/media/screenshots/bag-validator.png)
+![Nu Html Checker Login page](/media/screenshots/login-validator.png)
+
 16. W3C CSS validator evidence for the project stylesheet.
 17. JavaScript validation is not applicable because there are no custom
     JavaScript files or inline application JavaScript; Bootstrap and Font

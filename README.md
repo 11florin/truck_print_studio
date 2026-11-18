@@ -41,7 +41,7 @@ store.
 The main journey I designed is:
 
 ```text
-Homepage -> Catalogue -> Product details -> Bag -> Checkout -> Stripe -> Confirmation
+Homepage -> Categories -> Product details -> Bag -> Checkout -> Stripe -> Confirmation
 ```
 
 Visitors can browse and buy as guests. After signing in, customers can save
@@ -410,6 +410,24 @@ details about another customer's order or review are not exposed.
 
 Files uploaded locally are not persistent on Heroku. I configured Cloudinary
 for media and WhiteNoise for static files.
+
+### HTML heading hierarchy
+
+The W3C HTML validator identified heading-level skips on product cards. Some
+templates used `h5` elements immediately after a page-level `h1`, without
+the intermediate heading levels. I changed the product-card and wishlist
+titles to `h2` elements with the Bootstrap `h5` classes, preserving the visual
+appearance while restoring a logical heading hierarchy.
+
+### Registration form markup
+
+The W3C HTML validator found invalid markup on the registration page. Django's
+generated `form.as_p` output placed password help text containing an unordered
+list inside a `span`, while other generated paragraph markup was left out of
+scope. I replaced `form.as_p` with explicit field markup for the registration
+form, using `div` containers, labels, field errors and valid help-text markup.
+This preserves Django's form validation while producing structurally valid
+HTML.
 
 These fixes are covered by the automated tests where appropriate. I will also
 record the manual browser checks and any remaining issues in the evidence
