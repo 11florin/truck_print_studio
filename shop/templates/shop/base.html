@@ -4,7 +4,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="{% block meta_description %}Made-to-order truck and UK road transport clothing and mugs from Truck Print Studio.{% endblock %}"
+    />
     <title>{% block title %}Truck Print Studio{% endblock %}</title>
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <!-- Bootstrap -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
@@ -16,11 +22,15 @@
     <nav class="navbar navbar-expand-lg bg-white border-bottom">
       <div class="container">
         <a class="navbar-brand brand fw-bold" href="{% url 'shop:home' %}">
-          <img
-            src="{% static 'images/logo.png' %}"
-            alt="Truck Print Studio"
-            height="45"
-          />
+          <picture>
+            <source srcset="{% static 'images/logo.webp' %}" type="image/webp" />
+            <img
+              src="{% static 'images/logo.webp' %}"
+              alt="Truck Print Studio"
+              width="45"
+              height="45"
+            />
+          </picture>
         </a>
         <button
           class="navbar-toggler"
@@ -119,25 +129,19 @@
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Facebook"
-                        ><i class="fa-brands fa-square-facebook"></i
-                    ></a>
+                        >Facebook</a>
                     <a
                         class="text-muted"
                         href="https://www.linkedin.com/"
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="LinkedIn"
-                        ><i class="fa-brands fa-square-linkedin"></i
-                    ></a>
+                        >LinkedIn</a>
                     </div>
                 </div>
             </div>
         </div>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script
-      src="https://kit.fontawesome.com/7306ceb67d.js"
-      crossorigin="anonymous"
-    ></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

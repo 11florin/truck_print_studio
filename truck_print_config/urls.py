@@ -18,9 +18,16 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
+from django.http import HttpResponse
+
+
+def robots_txt(request):
+    content = "User-agent: *\nAllow: /\n"
+    return HttpResponse(content, content_type="text/plain")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('robots.txt', robots_txt),
     path('', include('shop.urls')),
     path('orders/', include('orders.urls')),
     path('accounts/', include('accounts.urls'))

@@ -429,6 +429,21 @@ form, using `div` containers, labels, field errors and valid help-text markup.
 This preserves Django's form validation while producing structurally valid
 HTML.
 
+### Lighthouse image and SEO optimisation
+
+Lighthouse identified oversized Cloudinary product images and a logo served at
+a much larger intrinsic size than its displayed dimensions. I added Cloudinary
+delivery transformations for automatic format selection, quality optimisation
+and maximum displayed width. I also added explicit image dimensions,
+lazy-loading for below-the-fold images and `fetchpriority="high"` for the main
+featured image.
+
+The Lighthouse report also identified a missing meta description and invalid
+`robots.txt` handling. I added a site-wide meta description and a valid
+`robots.txt` response. Font Awesome was removed from the application footer
+and Bootstrap JavaScript was deferred, reducing unnecessary third-party and
+render-blocking requests.
+
 These fixes are covered by the automated tests where appropriate. I will also
 record the manual browser checks and any remaining issues in the evidence
 listed in [docs/screenshots.md](./docs/screenshots.md).

@@ -1,4 +1,5 @@
-{% extends "shop/base.html" %} 
+{% extends "shop/base.html" %}
+{% load image_tags %}
 
 {% block title %}
     Truck Print Studio - UK road transport POD
@@ -45,9 +46,12 @@
       <div class="carousel-item {% if forloop.first %}active{% endif %}">
         {% if product.image %}
         <img
-          src="{{ product.image.url }}"
+          src="{{ product.image.url|cloudinary_image:'936' }}"
           class="d-block w-100 carousel-home__image"
           alt="{{ product.name }}"
+          width="936"
+          height="936"
+          fetchpriority="high"
         />
         {% endif %}
         <div class="carousel-caption text-start">
