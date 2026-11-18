@@ -15,8 +15,18 @@
 12. ![Email password reset](/media/screenshots/password-link-reset.png)
 13. 
 14. ![Order confirmation email showing order number, total and transaction ID](/media/screenshots/email-confirmation.png)
-15. Missing URL showing the informative redirect back to the shop.
-16. Mobile navigation and checkout layout.
-17. Failed form validation and a failed/cancelled payment message.
+15. ![Nu Html Checker Home page.](/media/screenshots/home-validator.png.png)
+16. W3C CSS validator evidence for the project stylesheet.
+17. JavaScript validation is not applicable because there are no custom
+    JavaScript files or inline application JavaScript; Bootstrap and Font
+    Awesome are loaded through external CDNs.
+18. PEP 8 evidence from `pycodestyle` or `flake8` for the Python source files.
+19. Lighthouse desktop evidence covering performance, accessibility,
+    best practices and SEO.
+20. Lighthouse mobile evidence covering performance, accessibility,
+    best practices and SEO.
+21. Browser developer tools Console evidence with application error checks.
+22. Browser developer tools Network evidence for page and asset requests.
+23. Browser developer tools responsive evidence for mobile and tablet layouts.
 
 

@@ -341,10 +341,25 @@ The tests include invalid input, corrupted sessions, missing products,
 access to another user's orders, unauthorised reviews, duplicate wishlists,
 incomplete Stripe events and unknown-URL redirection.
 
-For manual testing I use the checklist in
-[docs/screenshots.md](./docs/screenshots.md). I still need to add evidence
-for desktop, mobile, checkout, Stripe, email, password reset, Cloudinary,
-admin and 404 behaviour before submission.
+### Validation and browser testing
+
+I include validation and browser evidence as part of the manual testing for
+this project. I use the W3C HTML and CSS validators for the rendered HTML
+and the project stylesheet. The application is server-rendered with Django
+templates and does not contain custom JavaScript or inline application
+JavaScript; Bootstrap and Font Awesome are loaded through external CDNs.
+For this reason, JavaScript validation is not applicable to project-owned
+code.
+
+I review the Python source against PEP 8 conventions with a checker such as
+`pycodestyle` or `flake8`. I also assess desktop and mobile pages with Google
+Lighthouse, recording the performance, accessibility, best-practices and SEO
+results. Browser developer tools are used to review the Console, Network and
+responsive Device Toolbar views and to check for application errors or
+unexpected failed requests.
+
+The complete validation and browser-testing evidence is organised in
+[docs/screenshots.md](./docs/screenshots.md).
 
 ## Bugs Found and Fixed During Testing
 
@@ -479,9 +494,6 @@ SQLite locally.
 Before submission I still need to complete:
 
 - manual screenshots from the evidence checklist;
-- HTML and CSS validation;
-- Lighthouse and accessibility checks;
-- browser-console checks;
 - complete testing of the deployed version;
 - uploading the final images and products to production;
 - committing and pushing the final local changes.
