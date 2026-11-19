@@ -23,40 +23,13 @@ and account actions. Product pages provide the decision-making information
 
 ## Page wireframes
 
-### Catalogue and product
-
-```text
-+----------------------------------------------------------+
-| Logo | Categories | Shop | Bag | Account                 |
-+----------------------------------------------------------+
-| Search and filters                                       |
-| [Product card] [Product card] [Product card]             |
-| image, name, price, View design                         |
-+----------------------------------------------------------+
-
-+----------------------------------------------------------+
-| Product image | Name, description, price                 |
-|               | Size selector (clothing only)            |
-|               | [Add to bag] [Wishlist]                  |
-|               | Reviews and feedback                     |
-+----------------------------------------------------------+
-```
-
-### Bag and checkout
-
-```text
-+----------------------------------------------------------+
-| Bag                                                     |
-| image | product | size | quantity | remove              |
-|                                                     total|
-| [Continue shopping]                         [Checkout]  |
-+----------------------------------------------------------+
-
-+----------------------------------------------------------+
-| Delivery form                 | Order summary            |
-| labelled fields + errors      | image, size, total       |
-| [Continue to payment]         |                          |
-+----------------------------------------------------------+
+![bag](/media/wireframes/bag.png)
+![checkout](/media/wireframes/checkout.png)
+![home](/media/wireframes/home.png)
+![login-register](/media/wireframes/login-register.png)
+![order-confirmation](/media/wireframes/order-confirmation.png)
+![product-img](/media/wireframes/product-img.png)
+![wishlist](/media/wireframes/wishlist.png)
 ```
 
 ## UX, accessibility and control decisions
@@ -88,6 +61,5 @@ state. The session bag is converted into `OrderItem` records at checkout;
 Stripe's webhook then updates the order payment state. This keeps the browser
 from being the source of truth for payment or order status.
 
-## Manual distinction evidence
 
 

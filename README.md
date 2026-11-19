@@ -265,7 +265,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-For local development I use a `.env` file, which must not be committed to
+For local development I use a `.env` file, which is not  committed to
 Git:
 
 ```env
@@ -280,15 +280,7 @@ STRIPE_CURRENCY=gbp
 CLOUDINARY_URL=cloudinary://replace-me
 ```
 
-For email I can configure Resend:
-
-```env
-EMAIL_BACKEND=accounts.email_backend.ResendEmailBackend
-RESEND_API_KEY=re_replace-me
-DEFAULT_FROM_EMAIL=Truck Print Studio <verified-sender@example.com>
-```
-
-or Gmail SMTP:
+For email I configure Gmail SMTP:
 
 ```env
 EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
@@ -351,8 +343,8 @@ JavaScript; Bootstrap and Font Awesome are loaded through external CDNs.
 For this reason, JavaScript validation is not applicable to project-owned
 code.
 
-I review the Python source against PEP 8 conventions with a checker such as
-`pycodestyle` or `flake8`. I also assess desktop and mobile pages with Google
+I review the Python source against PEP 8 conventions with a checker  `flake8`. 
+I also assess desktop and mobile pages with Google
 Lighthouse, recording the performance, accessibility, best-practices and SEO
 results. Browser developer tools are used to review the Console, Network and
 responsive Device Toolbar views and to check for application errors or
