@@ -3,6 +3,9 @@ from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from orders.models import Order
+from shop.models import Category, Product, Wishlist
+
 
 class AuthenticationTests(TestCase):
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
@@ -138,3 +141,104 @@ class AuthenticationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertIn("/admin/login/", response["Location"])
+
+
+class AccountDashboardTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="dashboard-user",
+            email="dashboard@example.com",
+            password="Strong-password-123",
+        )
+        self.other_user = User.objects.create_user(
+            username="other-user",
+            email="other@example.com",
+            password="Strong-password-123",
+        )
+        self.category, _ = Category.objects.get_or_create(
+            slug="dashboard-t-shirts",
+            defaults={"name": "Dashboard T-Shirts"},
+        )
+        self.product = Product.objects.create(
+            category=self.category,
+            name="Road Haulage Tee",
+            product_type="tshirt",
+            description="A truck-inspired T-shirt.",
+            price="24.99",
+            active=True,
+        )
+        self.order = Order.objects.create(
+            user=self.user,
+            email=self.user.email,
+            full_name="Dashboard User",
+            address="12 Road Street",
+            city="London",
+            postal_code="W1 1AA",
+            total="24.99",
+            status="paid",
+        )
+        Order.objects.create(
+            user=self.other_user,
+            email=self.other_user.email,
+            full_name="Other User",
+            address="Other address",
+            city="Manchester",
+            postal_code="M1 1AA",
+            total="50.00",
+        )
+        Wishlist.objects.create(user=self.user, product=self.product)
+
+    def test_profile_shows_only_current_user_data(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("accounts:profile"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.user.username)
+        self.assertContains(response, self.user.email)
+        self.assertContains(response, self.product.name)
+        self.assertContains(response, f"Order #{self.order.id}")
+        self.assertEqual(list(response.context["recent_orders"]), [self.order])
+        self.assertEqual(response.context["order_count"], 1)
+        self.assertEqual(response.context["wishlist_count"], 1)
+
+    def test_profile_empty_activity_states_are_rendered(self):
+        empty_user = User.objects.create_user(
+            username="empty-user",
+            email="empty@example.com",
+            password="Strong-password-123",
+        )
+        self.client.force_login(empty_user)
+
+        response = self.client.get(reverse("accounts:profile"))
+
+        self.assertContains(response, "You have not placed any orders yet")
+        self.assertContains(response, "You have not saved any designs yet")
+
+    def test_password_change_requires_login_and_updates_password(self):
+        change_response = self.client.post(
+            reverse("accounts:password_change"),
+            {
+                "old_password": "wrong-password",
+                "new_password1": "New-strong-password-123",
+                "new_password2": "New-strong-password-123",
+            },
+        )
+        self.assertRedirects(
+            change_response,
+            f"{reverse('accounts:login')}?next={reverse('accounts:password_change')}",
+        )
+
+        self.client.force_login(self.user)
+        change_response = self.client.post(
+            reverse("accounts:password_change"),
+            {
+                "old_password": "Strong-password-123",
+                "new_password1": "New-strong-password-123",
+                "new_password2": "New-strong-password-123",
+            },
+        )
+
+        self.assertRedirects(change_response, reverse("accounts:password_change_done"))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("New-strong-password-123"))

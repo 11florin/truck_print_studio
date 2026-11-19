@@ -169,6 +169,47 @@ body {
   width: 100%;
 }
 
+/* account dashboard */
+.account-hero {
+  background: #16251f;
+  color: #fff;
+}
+.account-summary {
+  min-height: 100%;
+  background: #fff;
+  border: 1px solid #e8e3da;
+  border-radius: 0.5rem;
+}
+.account-summary__label {
+  color: #6c757d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.account-summary__value {
+  color: #16251f;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+.account-section {
+  background: #fff;
+  border: 1px solid #e8e3da;
+  border-radius: 0.5rem;
+}
+.account-wishlist-item {
+  min-height: 100%;
+}
+.account-wishlist-item img {
+  aspect-ratio: 1 / 1;
+  height: auto;
+  max-width: 100%;
+  object-fit: cover;
+}
+
+.account-wishlist-item p {
+  overflow-wrap: anywhere;
+}
+
 /* list */
 .catalog-header {
   gap: 1.5rem;

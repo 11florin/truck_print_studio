@@ -4,6 +4,9 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
+from orders.models import Order
+from shop.models import Wishlist
+
 from .forms import RegistrationForm
 
 
@@ -28,5 +31,20 @@ def register(request):
 
 @login_required
 def profile(request):
-    """Display the authenticated user's account page."""
-    return render(request, 'accounts/profile.html')
+    """Display account details and recent customer activity."""
+    recent_orders = (
+        Order.objects.filter(user=request.user)
+        .prefetch_related("items")
+        .order_by("-created_at")[:3]
+    )
+    wishlist_items = (
+        Wishlist.objects.filter(user=request.user)
+        .select_related("product", "product__category")[:4]
+    )
+
+    return render(request, 'accounts/profile.html', {
+        "recent_orders": recent_orders,
+        "wishlist_items": wishlist_items,
+        "order_count": Order.objects.filter(user=request.user).count(),
+        "wishlist_count": Wishlist.objects.filter(user=request.user).count(),
+    })
