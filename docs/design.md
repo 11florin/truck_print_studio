@@ -21,13 +21,13 @@ and account actions. Product pages provide the decision-making information
 
 ## Page wireframes
 
-![bag](/media/wireframes/bag.png)
-![checkout](/media/wireframes/checkout.png)
-![home](/media/wireframes/home.png)
-![login-register](/media/wireframes/login-register.png)
-![order-confirmation](/media/wireframes/order-confirmation.png)
-![product-img](/media/wireframes/product-img.png)
-![wishlist](/media/wireframes/wishlist.png)
+![bag](wireframes/bag.png)
+![checkout](wireframes/checkout.png)
+![home](wireframes/home.png)
+![login-register](wireframes/login-register.png)
+![order-confirmation](wireframes/order-confirmation.png)
+![product-img](wireframes/product-img.png)
+![wishlist](wireframes/wishlist.png)
 
 ## UX, accessibility and control decisions
 
