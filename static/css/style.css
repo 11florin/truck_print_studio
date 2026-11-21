@@ -57,7 +57,7 @@ body {
   transform: translateX(0);
 }
 .navbar-brand img {
-  height: 45px;
+  height: 62px;
   width: auto;
   object-fit: contain;
 }
@@ -302,6 +302,12 @@ body {
     transition: none;
   }
 }
+@media (min-width: 768px) {
+  .navbar-brand img {
+    height: 70px;
+  }
+}
+
 @media (min-width: 992px) {
   .navbar-nav {
     gap: 1.25rem;
