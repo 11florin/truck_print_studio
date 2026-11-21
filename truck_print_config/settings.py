@@ -44,10 +44,9 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 STRIPE_CURRENCY = env("STRIPE_CURRENCY", default="gbp")
-RESEND_API_KEY = env("RESEND_API_KEY", default="")
 DEFAULT_FROM_EMAIL = env(
     "DEFAULT_FROM_EMAIL",
-    default="Truck Print Studio <onboarding@resend.dev>",
+    default="Truck Print Studio <noreply@truckprintstudio.com>",
 )
 
 
@@ -185,7 +184,7 @@ if not DEBUG:
 
 EMAIL_BACKEND = env(
     "EMAIL_BACKEND",
-    default="accounts.email_backend.ResendEmailBackend",
+    default="django.core.mail.backends.smtp.EmailBackend",
 )
 EMAIL_HOST = env("EMAIL_HOST", default="")
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)

@@ -8,14 +8,12 @@ made-to-order purchase without unnecessary account creation. The catalogue,
 bag and checkout are therefore the primary journey. Accounts, wishlists,
 reviews and order history provide optional value after the first purchase.
 
-The application is original coursework created for this target audience. It
-does not copy a walkthrough project. Bootstrap, Font Awesome, Stripe,
-Cloudinary, WhiteNoise and Django are external dependencies; application
-models, views, templates, CSS, tests and business rules are project code.
+The application was designed and developed for this target audience. Django,
+Bootstrap, Font Awesome, Stripe, Cloudinary and WhiteNoise provide the external
+framework and service functionality. The application models, views, templates,
+CSS, tests and business rules are my own project code.
 
 ## Information architecture
-
-
 
 The navigation keeps the high-priority actions visible: categories, shop, bag
 and account actions. Product pages provide the decision-making information
@@ -30,7 +28,6 @@ and account actions. Product pages provide the decision-making information
 ![order-confirmation](/media/wireframes/order-confirmation.png)
 ![product-img](/media/wireframes/product-img.png)
 ![wishlist](/media/wireframes/wishlist.png)
-```
 
 ## UX, accessibility and control decisions
 
@@ -60,6 +57,3 @@ relationships and database constraints, and templates render the resulting
 state. The session bag is converted into `OrderItem` records at checkout;
 Stripe's webhook then updates the order payment state. This keeps the browser
 from being the source of truth for payment or order status.
-
-
-

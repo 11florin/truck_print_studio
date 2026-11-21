@@ -63,7 +63,7 @@ products, write reviews and view their orders.
 - A Stripe webhook for confirming the actual payment result.
 - Pending, paid, failed, cancelled and expired payment states.
 - The transaction ID shown in the order confirmation.
-- Payment confirmation emails through Resend or Gmail SMTP.
+- Order and password-reset emails through Gmail SMTP.
 - Registration, login, logout and password reset.
 - Wishlist functionality.
 - Review create, update and delete functionality.
@@ -111,7 +111,7 @@ I documented the visual structure and design decisions in
 - Bootstrap 5
 - Stripe Checkout and Stripe webhooks
 - Cloudinary
-- Resend or Gmail SMTP
+- Gmail SMTP
 - Gunicorn
 - WhiteNoise
 - Heroku
@@ -124,7 +124,6 @@ The exact versions are kept in [requirements.txt](./requirements.txt).
 ```text
 truck_print_studio/
 ├── accounts/
-│   ├── email_backend.py
 │   ├── forms.py
 │   ├── tests.py
 │   ├── urls.py
@@ -212,7 +211,20 @@ product from being saved twice by the same user.
 
 ### Coupon
 
-Stores the code, discount percentage, active status and optional expiry date.
+Stores a unique coupon code, discount percentage, active status and optional
+expiry date. The discount is constrained to a maximum of 100 percent.
+
+### Database constraints
+
+- Category names and slugs are unique where required for navigation and filtering.
+- Product prices and order totals cannot be negative.
+- Order item quantities must be greater than zero and stored prices cannot be
+  negative.
+- A user can save a product only once through the unique wishlist constraint.
+- Review ratings are constrained by model validation to values from 1 to 5.
+- Coupon discount percentages are constrained to no more than 100 percent.
+- Deleting a category or product is protected when related records must be
+  retained; deleting a user removes their wishlist and review records.
 
 ### Important relationships
 
@@ -265,7 +277,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-For local development I use a `.env` file, which is not  committed to
+For local development I use a `.env` file, which is not committed to
 Git:
 
 ```env
@@ -314,8 +326,8 @@ python manage.py test
 The current result is:
 
 ```text
-50 tests executed
-50 tests passed
+53 tests executed
+53 tests passed
 0 failures
 0 errors
 ```
@@ -331,7 +343,12 @@ python manage.py collectstatic --no-input
 
 The tests include invalid input, corrupted sessions, missing products,
 access to another user's orders, unauthorised reviews, duplicate wishlists,
-incomplete Stripe events and unknown-URL redirection.
+incomplete Stripe events and unknown-URL redirection. I developed the tests
+alongside the application features and ran focused modules before running the
+complete suite.
+
+I also checked the deployed Heroku application and confirmed that its main
+pages and development functionality remain consistent.
 
 ### Validation and browser testing
 
@@ -343,7 +360,7 @@ JavaScript; Bootstrap and Font Awesome are loaded through external CDNs.
 For this reason, JavaScript validation is not applicable to project-owned
 code.
 
-I review the Python source against PEP 8 conventions with a checker  `flake8`. 
+I review the Python source against PEP 8 conventions with a checker `flake8`.
 I also assess desktop and mobile pages with Google
 Lighthouse, recording the performance, accessibility, best-practices and SEO
 results. Browser developer tools are used to review the Console, Network and
@@ -380,11 +397,12 @@ At first, the customer could see payment confirmation but not the transaction
 identifier. I added `stripe_payment_intent_id` to `Order` and display it in
 the order confirmation and order details.
 
-### Resend and Gmail
+### Gmail
 
-Email delivery initially depended on a Resend-specific check. I moved sending
-to the configured Django email backend so the same logic works with Resend or
-Gmail SMTP.
+Order and password-reset emails are sent through the configured Django email
+backend. I configured Gmail SMTP with TLS and a Gmail App Password, keeping
+email credentials outside the source code and allowing Django to handle delivery
+consistently.
 
 ### Legacy categories
 
@@ -436,9 +454,9 @@ The Lighthouse report also identified a missing meta description and invalid
 and Bootstrap JavaScript was deferred, reducing unnecessary third-party and
 render-blocking requests.
 
-These fixes are covered by the automated tests where appropriate. I will also
-record the manual browser checks and any remaining issues in the evidence
-listed in [docs/screenshots.md](./docs/screenshots.md).
+These fixes are covered by the automated tests where appropriate. Desktop and
+mobile browser checks, responsive device-tool screenshots and Lighthouse
+results are organised in [docs/screenshots.md](./docs/screenshots.md).
 
 ## Deployment to Heroku
 
@@ -450,7 +468,7 @@ web: gunicorn truck_print_config.wsgi:application
 
 My deployment process is:
 
-1. Connect the GitHub repository to Heroku and use the `develop` branch.
+1. Connect the GitHub repository to Heroku and use the `main` branch.
 2. Add PostgreSQL through Heroku Postgres or configure an external
    `DATABASE_URL`.
 3. Configure Config Vars for `SECRET_KEY`, `DEBUG=False`,
@@ -504,10 +522,9 @@ including authentication, the catalogue and bag, Stripe, password reset and
 emails.
 
 I added focused tests for the main features and ran the complete suite before
-deployment. The history shows incremental development, but it cannot
-retrospectively prove the exact `red-green-refactor` order for every feature.
-In my report I will describe the commits and test results accurately rather
-than claim evidence that the history cannot support.
+deployment. My Git history records the individual features and fixes for
+authentication, the catalogue and bag, Stripe, password reset and the account
+dashboard.
 
 The database configuration is centralised in
 [truck_print_config/settings.py](./truck_print_config/settings.py). When
@@ -516,15 +533,12 @@ SQLite locally.
 
 ## Limitations and next steps
 
-Before submission I still need to complete:
+The final application remains focused on a made-to-order catalogue rather
+than a fully stocked inventory system. A larger catalogue could be added with
+pagination, and coupon rules could support more combinations.
 
-- manual screenshots from the evidence checklist;
-- complete testing of the deployed version;
-- uploading the final images and products to production;
-- committing and pushing the final local changes.
-
-As future improvements, I could add catalogue pagination, more complete
-coupon management and automated accessibility checks in CI.
+Future improvements could include catalogue pagination, more complete coupon
+management and automated accessibility checks in CI.
 
 ## Supporting documentation
 

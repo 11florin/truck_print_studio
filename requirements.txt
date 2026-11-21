@@ -16,7 +16,6 @@ psycopg-binary==3.3.6
 pycodestyle==2.15.0
 pyflakes==4.1.0
 requests==2.34.2
-resend==2.53.2
 six==1.17.0
 sqlparse==0.6.1
 stripe==17.0.0
