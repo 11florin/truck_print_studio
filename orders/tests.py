@@ -123,7 +123,6 @@ class CheckoutTests(OrderTestDataMixin, TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(item.size, "")
 
-    @override_settings(RESEND_API_KEY="re_test_key")
     def test_webhook_marks_order_paid_once(self):
         order = Order.objects.create(
             email="customer@example.com",

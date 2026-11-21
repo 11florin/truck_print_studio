@@ -15,8 +15,6 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from resend.exceptions import ResendError
-
 from .forms import CheckoutForm
 from .email_service import send_order_confirmation
 from .models import Order, OrderItem
@@ -275,7 +273,6 @@ def stripe_webhook(request):
         except (
             ImproperlyConfigured,
             OSError,
-            ResendError,
             SMTPException,
         ):
             logger.exception("Order confirmation email failed for order %s.", order.id)
