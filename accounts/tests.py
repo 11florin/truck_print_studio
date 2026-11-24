@@ -215,6 +215,13 @@ class AccountDashboardTests(TestCase):
         self.assertContains(response, "You have not placed any orders yet")
         self.assertContains(response, "You have not saved any designs yet")
 
+    def test_password_change_page_loads(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("accounts:password_change"))
+
+        self.assertEqual(response.status_code, 200)
+
     def test_password_change_requires_login_and_updates_password(self):
         change_response = self.client.post(
             reverse("accounts:password_change"),
@@ -230,9 +237,6 @@ class AccountDashboardTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        page_response = self.client.get(reverse("accounts:password_change"))
-        self.assertEqual(page_response.status_code, 200)
-
         change_response = self.client.post(
             reverse("accounts:password_change"),
             {
