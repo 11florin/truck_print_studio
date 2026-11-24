@@ -230,6 +230,9 @@ class AccountDashboardTests(TestCase):
         )
 
         self.client.force_login(self.user)
+        page_response = self.client.get(reverse("accounts:password_change"))
+        self.assertEqual(page_response.status_code, 200)
+
         change_response = self.client.post(
             reverse("accounts:password_change"),
             {
