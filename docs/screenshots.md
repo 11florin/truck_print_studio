@@ -19,10 +19,26 @@
 ## Stripe checkout
 
 ![Stripe test checkout page](screenshots/stripe-test-checkout.png)
+![Stripe test checkout page](screenshots/stripe-test-2.png)
+![Stripe test checkout page](screenshots/stripe-test-3.png)
 
 ## Successful payment
 
 ![Successful order confirmation with `Paid` status](screenshots/successful-paid.png)
+![Successful order confirmation with `Paid` status](screenshots/successful-paid-2.png)
+
+## Payment cancelled
+![Payment cancelled](screenshots/payment-cancelled.png)
+
+## Decilned payment
+![Declined payment](screenshots/declined-payment.png)
+
+## P5.1 – Heroku Deployment and Successful Stripe Test Checkout
+![Payment complete for checking sha](screenshots/payment-complete-sha.png)
+![Succesful deploy 4cbfeada](screenshots/succesfull-deployed-4cbfeada.png)
+![Payment intent succeded sandbox stripe](screenshots/payment-intent-succeded-sandbox.png)
+![SHA commit ](screenshots/sha-commit.png)
+
 
 ## Wishlist
 
@@ -149,3 +165,6 @@ are loaded through external CDNs.
 ### Bag page
 
 ![Lighthouse mobile result for the bag page](screenshots/cart-lighthouse-mobile.png)
+
+## Heroku debug
+![Heroku DEBUG-False](screenshots/debug-false.png)

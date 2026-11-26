@@ -326,8 +326,8 @@ python manage.py test
 The current result is:
 
 ```text
-53 tests executed
-53 tests passed
+54 tests executed
+54 tests passed
 0 failures
 0 errors
 ```
@@ -499,6 +499,22 @@ WhiteNoise.
 The live application is:
 
 <https://truck-print-studio-d34dbb49183c.herokuapp.com/>
+
+## P5.1 – Heroku Deployment and Successful Stripe Test Checkout
+- P5.1 – Deployment verification
+- Hosted app: https://truck-print-studio-d34dbb49183c.herokuapp.com/
+- Heroku release: v79 — build succeeded
+- SHA shown by Heroku: 4cbfeada
+- Full commit SHA: 4cbfeadadc41cc2eceabe43cc75eac2aa49a0129
+- Checkout: completed on the hosted site in Stripe Sandbox on 25 Nov 2026 at 21:27 GMT
+- Result: checkout.session.completed and payment_intent.succeeded; total £29.00.
+
+
+## P5.3 – Production configuration and repository history scan
+- Heroku DEBUG setting: False (other configuration values redacted).
+- Repository history scanned locally with Gitleaks 8.16.0: 239 commits scanned; no leaks found. Scan performed on 25 Nov 2026.
+
+![Heroku DEBUG-False](screenshots/debug-false.png)
 
 ## Security
 
